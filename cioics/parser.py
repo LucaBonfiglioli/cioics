@@ -78,7 +78,6 @@ class StrParser:
     def parse_str(cls, data: str) -> Node:
         nodes = []
         tokens = re.findall(cls.DIRECTIVE_RE, data)
-
         for token in tokens:
             if len(token) == 0:
                 continue
@@ -87,7 +86,11 @@ class StrParser:
             else:
                 node = ObjectNode(token)
             nodes.append(node)
-        return StrBundleNode(*nodes)
+
+        if len(nodes) > 1:
+            return StrBundleNode(*nodes)
+        else:
+            return nodes[0]
 
 
 class Parser:

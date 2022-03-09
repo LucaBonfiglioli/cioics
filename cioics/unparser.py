@@ -8,14 +8,13 @@ from cioics.nodes import (
     Node,
     NodeVisitor,
     ObjectNode,
+    StrBundleNode,
     SweepNode,
     VarNode,
 )
 
 
 class UnparserVisitor(NodeVisitor):
-    _ROOT_KEY = "__root__"
-
     def __init__(self) -> None:
         super().__init__()
         self._data = None
@@ -32,6 +31,9 @@ class UnparserVisitor(NodeVisitor):
 
     def visit_object_node(self, node: ObjectNode) -> None:
         self._data = node.data
+
+    def visit_str_bundle_node(self, node: StrBundleNode) -> None:
+        self._data = "".join(unparse(x) for x in node.nodes)
 
     def visit_id_node(self, node: IdNode) -> None:
         self._data = node.name
