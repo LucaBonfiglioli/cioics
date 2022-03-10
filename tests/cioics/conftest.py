@@ -8,5 +8,5 @@ def sample_data():
 
 
 @pytest.fixture
-def full_cfg(sample_data):
-    return sample_data / "full_cfg.yml"
+def plain_cfg(sample_data):
+    return sample_data / "plain_cfg.yml"

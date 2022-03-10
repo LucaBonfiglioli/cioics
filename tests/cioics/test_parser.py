@@ -1,20 +1,8 @@
-import yaml
-from deepdiff import DeepDiff
 from cioics.nodes import IdNode, ObjectNode, StrBundleNode, SweepNode, VarNode
-
 from cioics.parser import parse
-from cioics.unparser import unparse
 
 
 class TestParser:
-    def test_parse_unparse(self, full_cfg):
-        cfg = yaml.safe_load(open(full_cfg))
-        parsed = parse(cfg)
-        recfg = unparse(parsed)
-        assert not DeepDiff(cfg, recfg)
-        reparsed = parse(recfg)
-        assert reparsed == parsed
-
     def test_str_bundle(self):
         expr = "I am a string with $var(nested.variable.one) and $sweep(10, sasso.grosso, '30')"
         expected = StrBundleNode(

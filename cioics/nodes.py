@@ -220,3 +220,6 @@ class SweepNode(Node):
         if isinstance(__o, SweepNode):
             return self.cases == __o.cases
         return False
+
+    def __hash__(self) -> int:
+        return hash(self.cases)
