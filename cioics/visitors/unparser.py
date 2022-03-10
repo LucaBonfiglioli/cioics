@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from cioics.nodes import (
+from cioics.ast.nodes import (
     DictNode,
     IdNode,
     ImportNode,

@@ -2,7 +2,7 @@ import ast
 import re
 from typing import Any, Union
 
-from cioics.nodes import (
+from cioics.ast.nodes import (
     ImportNode,
     Node,
     DictNode,

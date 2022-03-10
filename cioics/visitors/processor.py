@@ -6,8 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import pydash as py_
 from choixe.configurations import XConfig  # TODO: import xconfig in cioics
-
-from cioics.nodes import (
+from cioics.ast.nodes import (
     DictNode,
     IdNode,
     ImportNode,
@@ -18,7 +17,7 @@ from cioics.nodes import (
     SweepNode,
     VarNode,
 )
-from cioics.parser import parse
+from cioics.ast.parser import parse
 
 
 class Processor(NodeVisitor):

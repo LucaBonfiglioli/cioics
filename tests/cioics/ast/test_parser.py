@@ -1,5 +1,5 @@
-from cioics.nodes import IdNode, ObjectNode, StrBundleNode, SweepNode, VarNode
-from cioics.parser import parse
+from cioics.ast.nodes import IdNode, ObjectNode, StrBundleNode, SweepNode, VarNode
+from cioics.ast.parser import parse
 
 
 class TestParser:

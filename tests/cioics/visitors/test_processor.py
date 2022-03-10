@@ -1,7 +1,7 @@
-from typing import Dict
-from cioics.parser import parse
-from cioics.processor import Processor
 from deepdiff import DeepDiff
+
+from cioics.ast.parser import parse
+from cioics.visitors.processor import Processor
 
 
 class TestProcessor:
