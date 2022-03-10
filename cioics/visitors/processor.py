@@ -2,15 +2,15 @@ import os
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import pydash as py_
-from choixe.configurations import XConfig  # TODO: import xconfig in cioics
 from cioics.ast.nodes import (
     DictNode,
     IdNode,
     ImportNode,
     ListNode,
+    Node,
     NodeVisitor,
     ObjectNode,
     StrBundleNode,
@@ -18,6 +18,7 @@ from cioics.ast.nodes import (
     VarNode,
 )
 from cioics.ast.parser import parse
+from cioics.utils.io import load
 
 
 class Processor(NodeVisitor):
@@ -78,7 +79,7 @@ class Processor(NodeVisitor):
         if not path.is_absolute():
             path = self._cwd / path
 
-        subdata = XConfig(path).to_dict()  # TODO
+        subdata = load(path)
         parsed = parse(subdata)
         return [parsed.accept(self)]
 
@@ -87,3 +88,13 @@ class Processor(NodeVisitor):
         for x in node.cases:
             cases.extend(x.accept(self))
         return cases
+
+
+def process(
+    self,
+    node: Node,
+    context: Optional[Dict[str, Any]] = None,
+    cwd: Optional[Path] = None,
+) -> Sequence[Any]:
+    processor = Processor(context=context, cwd=cwd)
+    return node.accept(processor)
