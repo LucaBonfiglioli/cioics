@@ -5,34 +5,34 @@ from typing import Any, Optional, Sequence, Union
 
 
 class NodeVisitor:
-    def visit_dict_node(self, node: DictNode) -> None:
+    def visit_dict_node(self, node: DictNode) -> Any:
         pass
 
-    def visit_list_node(self, node: ListNode) -> None:
+    def visit_list_node(self, node: ListNode) -> Any:
         pass
 
-    def visit_object_node(self, node: ObjectNode) -> None:
+    def visit_object_node(self, node: ObjectNode) -> Any:
         pass
 
-    def visit_str_bundle_node(self, node: StrBundleNode) -> None:
+    def visit_str_bundle_node(self, node: StrBundleNode) -> Any:
         pass
 
-    def visit_id_node(self, node: IdNode) -> None:
+    def visit_id_node(self, node: IdNode) -> Any:
         pass
 
-    def visit_var_node(self, node: VarNode) -> None:
+    def visit_var_node(self, node: VarNode) -> Any:
         pass
 
-    def visit_import_node(self, node: ImportNode) -> None:
+    def visit_import_node(self, node: ImportNode) -> Any:
         pass
 
-    def visit_sweep_node(self, node: SweepNode) -> None:
+    def visit_sweep_node(self, node: SweepNode) -> Any:
         pass
 
 
 class Node(ABC):
     @abstractmethod
-    def accept(self, visitor: NodeVisitor) -> None:
+    def accept(self, visitor: NodeVisitor) -> Any:
         pass
 
 
@@ -45,8 +45,8 @@ class DictNode(Node):
     def nodes(self) -> dict[str, Node]:
         return self._nodes
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_dict_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_dict_node(self)
 
     def __repr__(self) -> str:
         return f"DictNode({self.nodes})"
@@ -66,8 +66,8 @@ class ListNode(Node):
     def nodes(self) -> list[Node]:
         return self._nodes
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_list_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_list_node(self)
 
     def __repr__(self) -> str:
         return f"ListNode({self.nodes})"
@@ -87,8 +87,8 @@ class ObjectNode(Node):
     def data(self) -> Any:
         return self._data
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_object_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_object_node(self)
 
     def __repr__(self) -> str:
         return f"ObjectNode({self.data})"
@@ -110,7 +110,7 @@ class StrBundleNode(Node):
     def nodes(self) -> list[Node]:
         return self._nodes
 
-    def accept(self, visitor: NodeVisitor) -> None:
+    def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_str_bundle_node(self)
 
     def __repr__(self) -> str:
@@ -134,8 +134,8 @@ class IdNode(Node):
     def name(self) -> str:
         return self._name
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_id_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_id_node(self)
 
     def __repr__(self) -> str:
         return f"IdNode({self.name})"
@@ -165,8 +165,8 @@ class VarNode(Node):
     def default(self) -> Optional[ObjectNode]:
         return self._default
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_var_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_var_node(self)
 
     def __repr__(self) -> str:
         return f"VarNode({self.identifier})"
@@ -189,8 +189,8 @@ class ImportNode(Node):
     def path(self) -> ObjectNode:
         return self._path
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_import_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_import_node(self)
 
     def __repr__(self) -> str:
         return f"ImportNode({self.path})"
@@ -210,8 +210,8 @@ class SweepNode(Node):
     def cases(self) -> Sequence[Union[ObjectNode, IdNode]]:
         return tuple(self._cases)
 
-    def accept(self, visitor: NodeVisitor) -> None:
-        visitor.visit_sweep_node(self)
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_sweep_node(self)
 
     def __repr__(self) -> str:
         return f"SweepNode({self.cases})"
