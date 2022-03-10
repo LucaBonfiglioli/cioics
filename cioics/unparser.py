@@ -15,26 +15,23 @@ from cioics.nodes import (
 
 
 class Unparser(NodeVisitor):
-    def unparse(self, node: Node) -> Any:
-        return node.accept(self)
-
     def visit_dict_node(self, node: DictNode) -> Dict:
         data = {}
         for k, v in node.nodes.items():
-            data[self.unparse(k)] = self.unparse(v)
+            data[k.accept(self)] = v.accept(self)
         return data
 
     def visit_list_node(self, node: ListNode) -> List:
         data = []
         for x in node.nodes:
-            data.append(self.unparse(x))
+            data.append(x.accept(self))
         return data
 
     def visit_object_node(self, node: ObjectNode) -> Any:
         return node.data
 
     def visit_str_bundle_node(self, node: StrBundleNode) -> str:
-        return "".join(self.unparse(x) for x in node.nodes)
+        return "".join(x.accept(self) for x in node.nodes)
 
     def visit_id_node(self, node: IdNode) -> str:
         return node.name
@@ -44,13 +41,13 @@ class Unparser(NodeVisitor):
         return f"$sweep({body})"
 
     def visit_var_node(self, node: VarNode) -> str:
-        return f"$var({self.unparse(node.identifier)})"
+        return f"$var({node.identifier.accept(self)})"
 
     def visit_import_node(self, node: ImportNode) -> str:
-        return f'$import("{self.unparse(node.path)}")'
+        return f'$import("{node.path.accept(self)}")'
 
     def _unparse_as_arg(self, node: Node) -> str:
-        unparsed = self.unparse(node)
+        unparsed = node.accept(self)
         if isinstance(node, ObjectNode):
             if isinstance(unparsed, str):
                 return f'"{unparsed}"'
@@ -65,4 +62,4 @@ class Unparser(NodeVisitor):
 
 def unparse(node: Node) -> Any:
     unparser = Unparser()
-    return unparser.unparse(node)
+    return node.accept(unparser)

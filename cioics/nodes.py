@@ -37,12 +37,12 @@ class Node(ABC):
 
 
 class DictNode(Node):
-    def __init__(self, nodes: dict[str, Node]) -> None:
+    def __init__(self, nodes: dict[Node, Node]) -> None:
         super().__init__()
         self._nodes = nodes
 
     @property
-    def nodes(self) -> dict[str, Node]:
+    def nodes(self) -> dict[Node, Node]:
         return self._nodes
 
     def accept(self, visitor: NodeVisitor) -> Any:
