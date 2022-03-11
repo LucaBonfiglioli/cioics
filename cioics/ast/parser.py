@@ -106,7 +106,11 @@ class Parser:
 
     @classmethod
     def parse(cls, data: Any) -> Node:
-        fn = cls._fn_map.get(data.__class__, ObjectNode)
+        fn = ObjectNode
+        for k, v in cls._fn_map.items():
+            if isinstance(data, k):
+                fn = v
+                break
         return fn(data)
 
 

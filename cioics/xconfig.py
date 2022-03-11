@@ -7,6 +7,7 @@ import pydash as py_
 from box import Box
 from schema import Schema
 
+from cioics.ast.nodes import Node
 from cioics.ast.parser import parse
 from cioics.utils.io import dump, load
 from cioics.visitors import decode, process, walk
@@ -15,7 +16,11 @@ from cioics.visitors import decode, process, walk
 class XConfig(Box):
     PRIVATE_KEYS = ["_filename", "_schema"]
 
-    def __init__(self, filename: str = None, **kwargs):
+    def __init__(
+        self,
+        filename: Optional[Union[str, Path]] = None,
+        plain_dict: Optional[Dict] = None,
+    ):
         """Creates a XConfig object from configuration file
         :param filename: configuration file [yaml, json, toml], defaults to None
         :type filename: str, optional
@@ -24,15 +29,14 @@ class XConfig(Box):
         """
 
         # options
-        _dict = kwargs.get("plain_dict", None)
         self._filename = None
 
-        if _dict is None:
+        if plain_dict is None:
             if filename is not None:
                 self._filename = Path(filename)
                 self.update(load(self._filename))
         else:
-            self.update(_dict)
+            self.update(plain_dict)
 
         self._schema: Optional[Schema] = None
 
@@ -91,7 +95,7 @@ class XConfig(Box):
         :raises NotImplementedError: Raise error for unrecognized extension
         """
         filename = Path(filename)
-        data = decode(parse(self))
+        data = decode(self.parse())
         dump(data, filename)
 
     def deep_get(self, full_key: Union[str, list], default: Optional[Any] = None):
@@ -137,15 +141,16 @@ class XConfig(Box):
         for key, new_value in other_chunks:
             self.deep_set(key, new_value, only_valid_keys=not full_merge)
 
-    def to_dict(self, discard_private_qualifiers: bool = True) -> Dict:
-        """
-        Turn the Box and sub Boxes back into a native python dictionary.
-        :return: python dictionary of this Box
-        """
-        return decode(parse(self))
+    def parse(self) -> Node:
+        sanitized = dict(self)
+        [sanitized.pop(x) for x in self.PRIVATE_KEYS]
+        return parse(sanitized)
+
+    def to_dict(self) -> Dict:
+        return decode(self.parse())
 
     def walk(self) -> List[Tuple[List[Union[str, int]], Any]]:
-        return walk(parse(self))
+        return walk(self.parse())
 
     def process(self) -> List[XConfig]:
-        return [XConfig(plain_dict=x) for x in process(parse(self))]
+        return [XConfig(plain_dict=x) for x in process(self.parse())]
