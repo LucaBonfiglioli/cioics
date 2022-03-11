@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pydash as py_
 from box import Box
-from box.from_file import converters
 from schema import Schema
 
 from cioics.ast.parser import parse
@@ -14,7 +13,6 @@ from cioics.visitors import decode, process, walk
 
 
 class XConfig(Box):
-    KNOWN_EXTENSIONS = converters.keys()
     PRIVATE_KEYS = ["_filename", "_schema"]
 
     def __init__(self, filename: str = None, **kwargs):
