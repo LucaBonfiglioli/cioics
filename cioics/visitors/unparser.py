@@ -41,7 +41,10 @@ class Unparser(NodeVisitor):
         return f"$sweep({body})"
 
     def visit_var_node(self, node: VarNode) -> str:
-        return f"$var({node.identifier.accept(self)})"
+        default_str = ""
+        if node.default is not None:
+            default_str = f", default={self._unparse_as_arg(node.default)}"
+        return f"$var({node.identifier.accept(self)}{default_str})"
 
     def visit_import_node(self, node: ImportNode) -> str:
         return f'$import("{node.path.accept(self)}")'

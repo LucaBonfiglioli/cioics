@@ -1,21 +1,56 @@
-from deepdiff import DeepDiff
+import os
+from pathlib import Path, PurePosixPath
 
 from cioics.ast.parser import parse
-from cioics.visitors.processor import Processor
+from cioics.utils.io import load
+from cioics.visitors import process
+from deepdiff import DeepDiff
 
 
 class TestProcessor:
-    _processor = Processor({"nested": {"variable": 3215}})
+    context = {"color": {"hue": "red"}, "animal": "cow"}
 
     def _expectation_test(self, data, expected) -> None:
         parsed = parse(data)
-        res = parsed.accept(self._processor)
+        res = process(parsed, context=self.context)
         [print(x) for x in res]
         assert not DeepDiff(res, expected)
 
+    def test_var_plain(self):
+        data = "$var(color.hue, default='blue')"
+        expected = ["red"]
+        self._expectation_test(data, expected)
+
+    def test_var_missing(self):
+        data = "$var(color.sat, default='low')"
+        expected = ["low"]
+        self._expectation_test(data, expected)
+
+    def test_var_str_bundle(self):
+        data = {"a": "I am a $var(color.hue) $var(animal)"}
+        expected = [{"a": "I am a red cow"}]
+        self._expectation_test(data, expected)
+
+    def test_import_plain(self, plain_cfg: Path):
+        path_str = str(PurePosixPath(plain_cfg)).replace("\\", "/")  # Windows please...
+        print(path_str)
+        data = {"a": f'$import("{path_str}")'}
+        expected = [{"a": load(plain_cfg)}]
+        self._expectation_test(data, expected)
+
+    def test_import_relative(self, plain_cfg: Path):
+        prev_cwd = os.getcwd()
+        os.chdir(plain_cfg.parent)
+        try:
+            data = {"a": f'$import("{plain_cfg.name}")'}
+            expected = [{"a": load(plain_cfg)}]
+            self._expectation_test(data, expected)
+        finally:
+            os.chdir(prev_cwd)
+
     def test_sweep_base(self):
         data = {
-            "a": "$sweep(1096, 20.0, '40', nested.variable)",
+            "a": "$sweep(1096, 20.0, '40', color.hue)",
             "b": {
                 "a": "$sweep('hello')",
                 "b": "$sweep('hello', 'world')",
@@ -27,19 +62,19 @@ class TestProcessor:
             {"a": 1096, "b": {"a": "hello", "b": "hello", "c": "hello", "d": 10}},
             {"a": 20.0, "b": {"a": "hello", "b": "hello", "c": "hello", "d": 10}},
             {"a": "40", "b": {"a": "hello", "b": "hello", "c": "hello", "d": 10}},
-            {"a": 3215, "b": {"a": "hello", "b": "hello", "c": "hello", "d": 10}},
+            {"a": "red", "b": {"a": "hello", "b": "hello", "c": "hello", "d": 10}},
             {"a": 1096, "b": {"a": "hello", "b": "world", "c": "hello", "d": 10}},
             {"a": 20.0, "b": {"a": "hello", "b": "world", "c": "hello", "d": 10}},
             {"a": "40", "b": {"a": "hello", "b": "world", "c": "hello", "d": 10}},
-            {"a": 3215, "b": {"a": "hello", "b": "world", "c": "hello", "d": 10}},
+            {"a": "red", "b": {"a": "hello", "b": "world", "c": "hello", "d": 10}},
             {"a": 1096, "b": {"a": "hello", "b": "hello", "c": "world", "d": 10}},
             {"a": 20.0, "b": {"a": "hello", "b": "hello", "c": "world", "d": 10}},
             {"a": "40", "b": {"a": "hello", "b": "hello", "c": "world", "d": 10}},
-            {"a": 3215, "b": {"a": "hello", "b": "hello", "c": "world", "d": 10}},
+            {"a": "red", "b": {"a": "hello", "b": "hello", "c": "world", "d": 10}},
             {"a": 1096, "b": {"a": "hello", "b": "world", "c": "world", "d": 10}},
             {"a": 20.0, "b": {"a": "hello", "b": "world", "c": "world", "d": 10}},
             {"a": "40", "b": {"a": "hello", "b": "world", "c": "world", "d": 10}},
-            {"a": 3215, "b": {"a": "hello", "b": "world", "c": "world", "d": 10}},
+            {"a": "red", "b": {"a": "hello", "b": "world", "c": "world", "d": 10}},
         ]
         self._expectation_test(data, expected)
 

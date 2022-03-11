@@ -70,18 +70,23 @@ class Processor(NodeVisitor):
         return [py_.get(self._context, node.name)]
 
     def visit_var_node(self, node: VarNode) -> List[Any]:
-        return [py_.get(self._context, node.identifier.name, node.default)]
+        branches = [node.default]
+        if node.default is not None:
+            branches = node.default.accept(self)
+        return [py_.get(self._context, node.identifier.name, x) for x in branches]
 
     def visit_import_node(self, node: ImportNode) -> List[Any]:
-        path = node.path.accept(self)
+        branches = node.path.accept(self)
+        data = []
+        for branch in branches:
+            path = Path(branch)
+            if not path.is_absolute():
+                path = self._cwd / path
 
-        path = Path(path)
-        if not path.is_absolute():
-            path = self._cwd / path
-
-        subdata = load(path)
-        parsed = parse(subdata)
-        return [parsed.accept(self)]
+            subdata = load(path)
+            parsed = parse(subdata)
+            data.extend(parsed.accept(self))
+        return data
 
     def visit_sweep_node(self, node: SweepNode) -> List[Any]:
         cases = []
@@ -91,10 +96,7 @@ class Processor(NodeVisitor):
 
 
 def process(
-    self,
-    node: Node,
-    context: Optional[Dict[str, Any]] = None,
-    cwd: Optional[Path] = None,
+    node: Node, context: Optional[Dict[str, Any]] = None, cwd: Optional[Path] = None
 ) -> Sequence[Any]:
     processor = Processor(context=context, cwd=cwd)
     return node.accept(processor)
