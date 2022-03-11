@@ -14,7 +14,7 @@ def load(path: Path) -> Any:
     if ext in ["yaml", "yml"]:
         return yaml.safe_load(open(path, "r"))
     elif ext in ["json"]:
-        return json.load(path)
+        return json.load(open(path, "r"))
 
 
 def dump(obj: Any, path: Path) -> None:

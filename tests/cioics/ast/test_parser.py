@@ -1,15 +1,92 @@
-from cioics.ast.nodes import IdNode, ObjectNode, StrBundleNode, SweepNode, VarNode
+from typing import Any
+
+import pytest
+from cioics.ast.nodes import (
+    DictNode,
+    IdNode,
+    ImportNode,
+    ListNode,
+    ObjectNode,
+    StrBundleNode,
+    SweepNode,
+    VarNode,
+)
 from cioics.ast.parser import parse
 
 
-class TestParser:
+class TestDictParser:
+    def test_parse_dict(self):
+        expr = {"a": 10, "b": {"c": 10.0, "d": "hello"}}
+        expected = DictNode(
+            {
+                ObjectNode("a"): ObjectNode(10),
+                ObjectNode("b"): DictNode(
+                    {
+                        ObjectNode("c"): ObjectNode(10.0),
+                        ObjectNode("d"): ObjectNode("hello"),
+                    }
+                ),
+            }
+        )
+        assert parse(expr) == expected
+
+
+class TestListParser:
+    def test_parse_list(self):
+        expr = [1, 2, 3, ("foo", "bar", [10.0, 10])]
+        expected = ListNode(
+            ObjectNode(1),
+            ObjectNode(2),
+            ObjectNode(3),
+            ListNode(
+                ObjectNode("foo"),
+                ObjectNode("bar"),
+                ListNode(ObjectNode(10.0), ObjectNode(10)),
+            ),
+        )
+        assert parse(expr) == expected
+
+
+class TestStrParser:
+    def test_simple(self):
+        expr = "I am a string"
+        assert parse(expr) == ObjectNode(expr)
+
+    @pytest.mark.parametrize(
+        ["id_", "default"],
+        [["var1", 10], ["var1.var2", "hello"], ["var.var.var", 10.0]],
+    )
+    def test_var(self, id_: Any, default: Any):
+        default_str = f'"{default}"' if isinstance(default, str) else default
+        expr = f"$var({id_}, default={default_str})"
+        assert parse(expr) == VarNode(IdNode(id_), default=ObjectNode(default))
+
+    def test_import(self):
+        path = "path/to/my/file.json"
+        expr = f"$import('{path}')"
+        assert parse(expr) == ImportNode(ObjectNode(path))
+
+    def test_sweep(self):
+        expr = "$sweep(10, foo.bar, '30')"
+        expected = SweepNode(ObjectNode(10), IdNode("foo.bar"), ObjectNode("30"))
+        assert parse(expr) == expected
+
     def test_str_bundle(self):
-        expr = "I am a string with $var(nested.variable.one) and $sweep(10, sasso.grosso, '30')"
+        expr = "I am a string with $var(one.two.three) and $sweep(10, foo.bar, '30')"
         expected = StrBundleNode(
             ObjectNode("I am a string with "),
-            VarNode(IdNode("nested.variable.one")),
+            VarNode(IdNode("one.two.three")),
             ObjectNode(" and "),
-            SweepNode(ObjectNode(10), IdNode("sasso.grosso"), ObjectNode("30")),
+            SweepNode(ObjectNode(10), IdNode("foo.bar"), ObjectNode("30")),
         )
-        parsed = parse(expr)
-        assert parsed == expected
+        assert parse(expr) == expected
+
+    def test_unknown_directive(self):
+        expr = "$unknown_directive(lots, of, params=10)"
+        with pytest.raises(NotImplementedError):
+            parse(expr)
+
+    def test_arg_too_complex(self):
+        expr = "$sweep(lots, of, [arguments, '10'])"
+        with pytest.raises(NotImplementedError):
+            parse(expr)

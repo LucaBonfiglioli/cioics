@@ -26,7 +26,7 @@ class DictParser:
 class ListParser:
     @classmethod
     def parse_list(cls, data: list) -> ListNode:
-        return ListNode([Parser.parse(x) for x in data])
+        return ListNode(*[Parser.parse(x) for x in data])
 
 
 class StrParser:
@@ -71,6 +71,9 @@ class StrParser:
         for py_kwarg in py_kwargs:
             key, value = py_kwarg.arg, py_kwarg.value
             kwargs[key] = cls._parse_argument(value)
+
+        if directive_name not in cls._fn_map:
+            raise NotImplementedError(directive_name)
 
         return cls._fn_map[directive_name](*args, **kwargs)
 

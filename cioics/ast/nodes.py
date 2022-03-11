@@ -4,35 +4,35 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Sequence, Union
 
 
-class NodeVisitor:
+class NodeVisitor:  # pragma: no cover
     def visit_dict_node(self, node: DictNode) -> Any:
-        pass
+        return node
 
     def visit_list_node(self, node: ListNode) -> Any:
-        pass
+        return node
 
     def visit_object_node(self, node: ObjectNode) -> Any:
-        pass
+        return node
 
     def visit_str_bundle_node(self, node: StrBundleNode) -> Any:
-        pass
+        return node
 
     def visit_id_node(self, node: IdNode) -> Any:
-        pass
+        return node
 
     def visit_var_node(self, node: VarNode) -> Any:
-        pass
+        return node
 
     def visit_import_node(self, node: ImportNode) -> Any:
-        pass
+        return node
 
     def visit_sweep_node(self, node: SweepNode) -> Any:
-        pass
+        return node
 
 
 class Node(ABC):
     @abstractmethod
-    def accept(self, visitor: NodeVisitor) -> Any:
+    def accept(self, visitor: NodeVisitor) -> Any:  # pragma: no cover
         pass
 
 
@@ -48,17 +48,15 @@ class DictNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_dict_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"DictNode({self.nodes})"
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, DictNode):
-            return self.nodes == __o.nodes
-        return False
+        return isinstance(__o, DictNode) and self.nodes == __o.nodes
 
 
 class ListNode(Node):
-    def __init__(self, nodes: list[Node]) -> None:
+    def __init__(self, *nodes: Node) -> None:
         super().__init__()
         self._nodes = nodes
 
@@ -69,13 +67,11 @@ class ListNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_list_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"ListNode({self.nodes})"
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, ListNode):
-            return self.nodes == __o.nodes
-        return False
+        return isinstance(__o, ListNode) and self.nodes == __o.nodes
 
 
 class ObjectNode(Node):
@@ -90,16 +86,14 @@ class ObjectNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_object_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"ObjectNode({self.data})"
 
     def __hash__(self) -> int:
         return hash(self._data)
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, ObjectNode):
-            return self.data == __o.data
-        return False
+        return isinstance(__o, ObjectNode) and self.data == __o.data
 
 
 class StrBundleNode(Node):
@@ -113,16 +107,14 @@ class StrBundleNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_str_bundle_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"StrBundleNode({self.nodes})"
 
     def __hash__(self) -> int:
         return hash(tuple(self.nodes))
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, StrBundleNode):
-            return self.nodes == __o.nodes
-        return False
+        return isinstance(__o, StrBundleNode) and self.nodes == __o.nodes
 
 
 class IdNode(Node):
@@ -137,16 +129,14 @@ class IdNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_id_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"IdNode({self.name})"
 
     def __hash__(self) -> int:
         return hash(self.name)
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, IdNode):
-            return self.name == __o.name
-        return False
+        return isinstance(__o, IdNode) and self.name == __o.name
 
 
 class VarNode(Node):
@@ -168,16 +158,18 @@ class VarNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_var_node(self)
 
-    def __repr__(self) -> str:
-        return f"VarNode({self.identifier})"
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"VarNode({self.identifier}, {self._default})"
 
     def __hash__(self) -> int:
         return hash((self.identifier, self.default))
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, VarNode):
-            return self.identifier == __o.identifier and self.default == __o.default
-        return False
+        return (
+            isinstance(__o, VarNode)
+            and self.identifier == __o.identifier
+            and self.default == __o.default
+        )
 
 
 class ImportNode(Node):
@@ -192,13 +184,11 @@ class ImportNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_import_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"ImportNode({self.path})"
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, ImportNode):
-            return self.path == __o.path
-        return False
+        return isinstance(__o, ImportNode) and self.path == __o.path
 
 
 class SweepNode(Node):
@@ -213,13 +203,11 @@ class SweepNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_sweep_node(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"SweepNode({self.cases})"
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, SweepNode):
-            return self.cases == __o.cases
-        return False
+        return isinstance(__o, SweepNode) and self.cases == __o.cases
 
     def __hash__(self) -> int:
         return hash(self.cases)
