@@ -19,6 +19,7 @@ def load(path: Path) -> Any:
 
 def dump(obj: Any, path: Path) -> None:
     ext = get_extension(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
     if ext in ["yaml", "yml"]:
         yaml.safe_dump(obj, open(path, "w"))
     elif ext in ["json"]:

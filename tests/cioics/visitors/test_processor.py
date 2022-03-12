@@ -91,12 +91,12 @@ class TestProcessor:
         self._expectation_test(data, [data], allow_branching=False)
 
     def test_sweep_lists(self):
-        data = ["$sweep(10, 20)", {"a": ["$sweep(30, 40)"]}]
+        data = ["$sweep(10, 20)", {"a": [10, "$sweep(30, 40)"]}]
         expected = [
-            [10, {"a": [30]}],
-            [20, {"a": [30]}],
-            [10, {"a": [40]}],
-            [20, {"a": [40]}],
+            [10, {"a": [10, 30]}],
+            [20, {"a": [10, 30]}],
+            [10, {"a": [10, 40]}],
+            [20, {"a": [10, 40]}],
         ]
         self._expectation_test(data, expected)
 

@@ -1,0 +1,13 @@
+# File to be imported from neural_network.yml
+
+type: Adam
+params:
+
+  # Pick the learning rate from context, at hparams.lr
+  learning_rate: $var(hparams.lr)
+
+  betas: 
+    - 0.9
+
+    # Sweep on second order beta 0.98 and 0.99
+    - $sweep(0.98, 0.99)

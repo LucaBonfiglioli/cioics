@@ -1,0 +1,31 @@
+# Example XConfig file
+
+model:
+  architecture:
+
+    # A sweep on backbone type: resnet18, resnet34 and resnet50
+    # Sweeps, like every other directive, can be placed inside a string
+    backbone: resnet$sweep("18", "34", "50")
+    heads:
+      - type: classification
+
+        # Pick the number of classes from context, at data.num_classes1
+        num_classes: $var(data.num_classes1)
+      - type: classification
+
+        # Pick the number of classes from context, at data.num_classes2
+        num_classes: $var(data.num_classes2)
+
+  # Leaf Directives like $var and $sweep can be contained in keys 
+  use_$sweep("batch", "layer")_norm: $var(hparams.normalize)
+
+
+training:
+
+  # $var can have default values, in this case, the integer 100
+  epochs: $var(hparams.num_epochs, default=100)
+
+  # Import from optimizer.yml, relative to this file
+  # Imported files are automatically parsed and included in the processing stack,
+  # so they can contain other imports and directives.
+  optimizer: $import("optimizer.yml")

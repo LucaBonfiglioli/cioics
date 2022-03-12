@@ -1,0 +1,18 @@
+model:
+  architecture:
+    backbone: resnet50
+    heads:
+    - num_classes: 8
+      type: classification
+    - num_classes: 4
+      type: classification
+  use_batch_norm: true
+training:
+  epochs: 600
+  optimizer:
+    params:
+      betas:
+      - 0.9
+      - 0.99
+      learning_rate: 0.001
+    type: Adam
