@@ -19,15 +19,20 @@ from cioics.ast.nodes import (
 )
 from cioics.ast.parser import parse
 from cioics.utils.io import load
+from cioics.visitors.unparser import unparse
 
 
 class Processor(NodeVisitor):
     def __init__(
-        self, context: Optional[Dict[str, Any]] = None, cwd: Optional[Path] = None
+        self,
+        context: Optional[Dict[str, Any]] = None,
+        cwd: Optional[Path] = None,
+        allow_branching: bool = True,
     ) -> None:
         super().__init__()
         self._context = context if context is not None else {}
         self._cwd = cwd if cwd is not None else Path(os.getcwd())
+        self._allow_branching = allow_branching
 
     def visit_dict_node(self, node: DictNode) -> List[Dict]:
         data = [{}]
@@ -89,14 +94,20 @@ class Processor(NodeVisitor):
         return data
 
     def visit_sweep_node(self, node: SweepNode) -> List[Any]:
-        cases = []
-        for x in node.cases:
-            cases.extend(x.accept(self))
-        return cases
+        if self._allow_branching:
+            cases = []
+            for x in node.cases:
+                cases.extend(x.accept(self))
+            return cases
+        else:
+            return [unparse(node)]
 
 
 def process(
-    node: Node, context: Optional[Dict[str, Any]] = None, cwd: Optional[Path] = None
-) -> Sequence[Any]:
-    processor = Processor(context=context, cwd=cwd)
+    node: Node,
+    context: Optional[Dict[str, Any]] = None,
+    cwd: Optional[Path] = None,
+    allow_branching: bool = True,
+) -> Any:
+    processor = Processor(context=context, cwd=cwd, allow_branching=allow_branching)
     return node.accept(processor)

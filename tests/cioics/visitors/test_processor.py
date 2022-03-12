@@ -10,9 +10,9 @@ from deepdiff import DeepDiff
 class TestProcessor:
     context = {"color": {"hue": "red"}, "animal": "cow"}
 
-    def _expectation_test(self, data, expected) -> None:
+    def _expectation_test(self, data, expected, allow_branching: bool = True) -> None:
         parsed = parse(data)
-        res = process(parsed, context=self.context)
+        res = process(parsed, context=self.context, allow_branching=allow_branching)
         [print(x) for x in res]
         assert not DeepDiff(res, expected)
 
@@ -77,6 +77,18 @@ class TestProcessor:
             {"a": "red", "b": {"a": "hello", "b": "world", "c": "world", "d": 10}},
         ]
         self._expectation_test(data, expected)
+
+    def test_sweep_no_branching(self):
+        data = {
+            "a": '$sweep(1096, 20.0, "40", color.hue)',
+            "b": {
+                "a": '$sweep("hello")',
+                "b": '$sweep("hello", "world")',
+                "c": '$sweep("hello", "world")',
+                "d": 10,
+            },
+        }
+        self._expectation_test(data, [data], allow_branching=False)
 
     def test_sweep_lists(self):
         data = ["$sweep(10, 20)", {"a": ["$sweep(30, 40)"]}]

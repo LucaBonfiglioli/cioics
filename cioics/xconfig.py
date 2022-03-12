@@ -20,6 +20,7 @@ class XConfig(Box):
         self,
         filename: Optional[Union[str, Path]] = None,
         plain_dict: Optional[Dict] = None,
+        schema: Optional[Schema] = None,
     ):
         """Creates a XConfig object from configuration file
         :param filename: configuration file [yaml, json, toml], defaults to None
@@ -29,36 +30,23 @@ class XConfig(Box):
         """
 
         # options
-        self._filename = None
+        self._filename = Path(filename) if filename is not None else None
+        self._schema = None
 
-        if plain_dict is None:
-            if filename is not None:
-                self._filename = Path(filename)
-                self.update(load(self._filename))
+        if plain_dict is not None:
+            data = plain_dict
+        elif self._filename is not None:
+            data = load(self._filename)
         else:
-            self.update(plain_dict)
+            data = {}
 
-        self._schema: Optional[Schema] = None
+        self.update(data)
+        self.set_schema(schema)
 
-    def copy(self) -> "XConfig":
-        """Prototype copy
-
-        :return: deep copy of source XConfig
-        :rtype: XConfig
-        """
-
-        new_xconfig = XConfig(filename=None)
-        new_xconfig.update(self.to_dict())
-        new_xconfig._filename = self._filename
-        new_xconfig._schema = self._schema
-        return new_xconfig
-
-    @property
-    def schema(self) -> Optional[Schema]:
+    def get_schema(self) -> Optional[Schema]:
         return self._schema
 
-    @schema.setter
-    def schema(self, s: Schema) -> None:
+    def set_schema(self, s: Schema) -> None:
         """Push validation schema
         :param schema: validation schema
         :type schema: Schema
@@ -67,6 +55,22 @@ class XConfig(Box):
             assert isinstance(s, Schema), "schema is not a valid Schema object!"
         self._schema = s
 
+    def get_filename(self) -> Optional[Path]:
+        return self._filename
+
+    def copy(self) -> XConfig:
+        """Prototype copy
+
+        :return: deep copy of source XConfig
+        :rtype: XConfig
+        """
+
+        return XConfig(
+            filename=self.get_filename(),
+            plain_dict=self.to_dict(),
+            schema=self.get_schema(),
+        )
+
     def validate(self, replace: bool = True):
         """Validate internal schema if any
 
@@ -74,8 +78,8 @@ class XConfig(Box):
         :type replace: bool
         """
 
-        if self.schema is not None:
-            new_dict = self.schema.validate(self.to_dict())
+        if self.get_schema() is not None:
+            new_dict = self.get_schema().validate(self.to_dict())
             if replace:
                 self.update(new_dict)
 
@@ -84,8 +88,8 @@ class XConfig(Box):
         :return: TRUE for valid or no schema inside
         :rtype: bool
         """
-        if self.schema is not None:
-            return self.schema.is_valid(self.to_dict())
+        if self.get_schema() is not None:
+            return self.get_schema().is_valid(self.to_dict())
         return True
 
     def save_to(self, filename: str) -> None:
@@ -152,5 +156,17 @@ class XConfig(Box):
     def walk(self) -> List[Tuple[List[Union[str, int]], Any]]:
         return walk(self.parse())
 
-    def process(self) -> List[XConfig]:
-        return [XConfig(plain_dict=x) for x in process(self.parse())]
+    def _process(
+        self, context: Optional[Dict[str, Any]] = None, allow_branching: bool = True
+    ) -> List[XConfig]:
+        cwd = self._filename.parent if self._filename is not None else None
+        data = process(
+            self.parse(), context=context, cwd=cwd, allow_branching=allow_branching
+        )
+        return [XConfig(filename=self._filename, plain_dict=x) for x in data]
+
+    def process(self, context: Optional[Dict[str, Any]] = None) -> XConfig:
+        return self._process(context=context, allow_branching=False)[0]
+
+    def process_all(self, context: Optional[Dict[str, Any]] = None) -> List[XConfig]:
+        return self._process(context=context, allow_branching=True)
