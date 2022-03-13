@@ -23,6 +23,9 @@ class NodeVisitor:  # pragma: no cover
     def visit_var_node(self, node: VarNode) -> Any:
         return node
 
+    def visit_env_node(self, node: EnvNode) -> Any:
+        return node
+
     def visit_import_node(self, node: ImportNode) -> Any:
         return node
 
@@ -167,6 +170,21 @@ class VarNode(Node):
     def __eq__(self, __o: object) -> bool:
         return (
             isinstance(__o, VarNode)
+            and self.identifier == __o.identifier
+            and self.default == __o.default
+        )
+
+
+class EnvNode(VarNode):
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_env_node(self)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"EnvNode({self.identifier}, {self._default})"
+
+    def __eq__(self, __o: object) -> bool:
+        return (
+            isinstance(__o, EnvNode)
             and self.identifier == __o.identifier
             and self.default == __o.default
         )

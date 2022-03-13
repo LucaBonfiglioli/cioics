@@ -8,6 +8,7 @@ model:
       type: classification
   use_layer_norm: true
 training:
+  device: cpu
   epochs: 600
   optimizer:
     params:

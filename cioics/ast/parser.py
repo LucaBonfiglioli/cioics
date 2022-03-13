@@ -3,6 +3,7 @@ import re
 from typing import Any, Union
 
 from cioics.ast.nodes import (
+    EnvNode,
     ImportNode,
     Node,
     DictNode,
@@ -35,6 +36,7 @@ class StrParser:
 
     _fn_map = {
         "var": VarNode,
+        "env": EnvNode,
         "import": ImportNode,
         "sweep": SweepNode,
     }

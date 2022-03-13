@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from cioics.ast.nodes import (
     DictNode,
+    EnvNode,
     IdNode,
     ImportNode,
     ListNode,
@@ -60,6 +61,15 @@ class TestStrParser:
         default_str = f'"{default}"' if isinstance(default, str) else default
         expr = f"$var({id_}, default={default_str})"
         assert parse(expr) == VarNode(IdNode(id_), default=ObjectNode(default))
+
+    @pytest.mark.parametrize(
+        ["id_", "default"],
+        [["env1", 42], ["env1.env2", "hello"], ["env.env.env", 25.0]],
+    )
+    def test_env(self, id_: Any, default: Any):
+        default_str = f'"{default}"' if isinstance(default, str) else default
+        expr = f"$env({id_}, default={default_str})"
+        assert parse(expr) == EnvNode(IdNode(id_), default=ObjectNode(default))
 
     def test_import(self):
         path = "path/to/my/file.json"

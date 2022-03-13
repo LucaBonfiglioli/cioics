@@ -9,12 +9,21 @@ from deepdiff import DeepDiff
 
 class TestProcessor:
     context = {"color": {"hue": "red"}, "animal": "cow"}
+    env = {"color.hue": "yellow", "animal": "snake"}
 
     def _expectation_test(self, data, expected, allow_branching: bool = True) -> None:
-        parsed = parse(data)
-        res = process(parsed, context=self.context, allow_branching=allow_branching)
-        [print(x) for x in res]
-        assert not DeepDiff(res, expected)
+        for k, v in self.env.items():
+            os.environ[k] = v
+
+        try:
+            parsed = parse(data)
+            res = process(parsed, context=self.context, allow_branching=allow_branching)
+            [print(x) for x in res]
+            assert not DeepDiff(res, expected)
+
+        finally:
+            for k in self.env:
+                del os.environ[k]
 
     def test_var_plain(self):
         data = "$var(color.hue, default='blue')"
@@ -29,6 +38,21 @@ class TestProcessor:
     def test_var_str_bundle(self):
         data = {"a": "I am a $var(color.hue) $var(animal)"}
         expected = [{"a": "I am a red cow"}]
+        self._expectation_test(data, expected)
+
+    def test_env_plain(self):
+        data = "$env(color.hue, default='blue')"
+        expected = ["yellow"]
+        self._expectation_test(data, expected)
+
+    def test_env_missing(self):
+        data = "$env(color.sat, default=25)"
+        expected = [25]
+        self._expectation_test(data, expected)
+
+    def test_env_str_bundle(self):
+        data = {"a": "I am a $env(color.hue) $env(animal)"}
+        expected = [{"a": "I am a yellow snake"}]
         self._expectation_test(data, expected)
 
     def test_import_plain(self, plain_cfg: Path):

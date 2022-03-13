@@ -2,11 +2,12 @@ import os
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 import pydash as py_
 from cioics.ast.nodes import (
     DictNode,
+    EnvNode,
     IdNode,
     ImportNode,
     ListNode,
@@ -79,6 +80,12 @@ class Processor(NodeVisitor):
         if node.default is not None:
             branches = node.default.accept(self)
         return [py_.get(self._context, node.identifier.name, x) for x in branches]
+
+    def visit_env_node(self, node: EnvNode) -> List[Any]:
+        branches = [node.default]
+        if node.default is not None:
+            branches = node.default.accept(self)
+        return [os.getenv(node.identifier.name, default=x) for x in branches]
 
     def visit_import_node(self, node: ImportNode) -> List[Any]:
         branches = node.path.accept(self)

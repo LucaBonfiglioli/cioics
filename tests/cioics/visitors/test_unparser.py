@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from cioics.ast.nodes import (
     DictNode,
+    EnvNode,
     IdNode,
     ImportNode,
     ListNode,
@@ -28,8 +29,16 @@ from deepdiff import DeepDiff
             "$var(variable.one)",
         ],
         [
+            EnvNode(IdNode("variable.one")),
+            "$env(variable.one)",
+        ],
+        [
             VarNode(IdNode("variable.one"), default=ObjectNode(-24)),
             "$var(variable.one, default=-24)",
+        ],
+        [
+            EnvNode(IdNode("variable.one"), default=ObjectNode(-24)),
+            "$env(variable.one, default=-24)",
         ],
         [ImportNode(ObjectNode("path/to/file.yaml")), '$import("path/to/file.yaml")'],
         [
