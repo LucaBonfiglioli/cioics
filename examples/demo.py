@@ -21,7 +21,7 @@ context = {
 # Load an XConfig
 cfg = XConfig(this_folder / "neural_network.yml")
 
-# Process the configuration, replacing variable, importing files, performing sweeps, etc...
+# Process the configuration, replacing variables, importing files, performing sweeps, etc...
 all_cfgs = cfg.process_all(context=context)
 
 # Save the output configurations to a folder named "outputs"
