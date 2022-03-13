@@ -29,4 +29,6 @@ training:
   # Imported files are automatically parsed and included in the processing stack,
   # so they can contain other imports and directives.
   optimizer: $import("optimizer.yml")
+
+  # Pick the training device from a system environment variable
   device: $env(TRAINING_DEVICE, default="cpu")
