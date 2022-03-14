@@ -29,7 +29,9 @@ class Chunk:
 
 # 🏜️🤠🌵
 class Walker(Unparser):
-    def visit_dict_node(self, node: DictNode) -> Chunk:
+    """Specialization of the `Unparser` for the walk operation."""
+
+    def visit_dict(self, node: DictNode) -> Chunk:
         chunk = Chunk([])
         for k, v in node.nodes.items():
             key = k.accept(self)
@@ -43,7 +45,7 @@ class Walker(Unparser):
 
         return chunk
 
-    def visit_list_node(self, node: ListNode) -> Chunk:
+    def visit_list(self, node: ListNode) -> Chunk:
         chunk = Chunk([])
         for i, x in enumerate(node.nodes):
             value = x.accept(self)
@@ -57,6 +59,36 @@ class Walker(Unparser):
 
 
 def walk(node: Node) -> List[Tuple[List[Union[str, int]], Any]]:
+    """A special unparsing operation that also flattens a structure into a list of
+    (deep_key, value) tuples. A deep key is a list of either strings or integers, that
+    can be used as a pydash path.
+
+    Example::
+
+        data = {
+            "a": 10,
+            "b": [
+                "bob",
+                {
+                    "a": 105,
+                    "b": "alice",
+                }
+            ]
+        }
+        walk(parse(data))
+        # [
+        #     (["a"], 10),
+        #     (["b", 0], "bob"),
+        #     (["b", 1, "a"], 105),
+        #     (["b", 1, "b"], "alice"),
+        # ]
+
+    Args:
+        node (Node): The Choixe AST node to walk.
+
+    Returns:
+        List[Tuple[List[Union[str, int]], Any]]: The flattened unparsed node.
+    """
     chunk: Chunk = node.accept(Walker())
     if not isinstance(chunk, Chunk):
         return [([], chunk)]

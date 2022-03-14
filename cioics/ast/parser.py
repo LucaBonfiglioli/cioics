@@ -4,6 +4,7 @@ from typing import Any, Union
 
 from cioics.ast.nodes import (
     EnvNode,
+    HashNode,
     ImportNode,
     Node,
     DictNode,
@@ -17,22 +18,47 @@ from cioics.ast.nodes import (
 
 
 class DictParser:
+    """Parser of Mapping-like python objects."""
+
     @classmethod
     def parse_dict(cls, data: dict) -> DictNode:
+        """Recursively transforms a dictionary into a `DictNode`.
+
+        Args:
+            data (dict): The dictionary to parse.
+
+        Returns:
+            DictNode: The parsed Choixe AST node.
+        """
         return DictNode(
             {StrParser.parse_str(k): Parser.parse(v) for k, v in data.items()}
         )
 
 
 class ListParser:
+    """Parser of Sequence-like python objects."""
+
     @classmethod
     def parse_list(cls, data: list) -> ListNode:
+        """Recursively transforms a list into a `ListNode`.
+
+        Args:
+            data (list): The list to parse.
+
+        Returns:
+            ListNode: The parsed Choixe AST node.
+        """
         return ListNode(*[Parser.parse(x) for x in data])
 
 
 class StrParser:
+    """Parser of python str objects."""
+
     DIRECTIVE_PREFIX = "$"
+    """Prefix used at the start of all Choixe directives."""
+
     DIRECTIVE_RE = rf"(?:\{DIRECTIVE_PREFIX}[^\)]+\))|(?:[^\$]*)"
+    """Regex used to check if a string is a Choixe directive."""
 
     _fn_map = {
         "var": VarNode,
@@ -81,6 +107,14 @@ class StrParser:
 
     @classmethod
     def parse_str(cls, data: str) -> Node:
+        """Transforms a string into a `Node`.
+
+        Args:
+            data (str): The string to parse.
+
+        Returns:
+            Node: The parsed Choixe AST node.
+        """
         nodes = []
         tokens = re.findall(cls.DIRECTIVE_RE, data)
         for token in tokens:
@@ -99,6 +133,8 @@ class StrParser:
 
 
 class Parser:
+    """Choixe parser for all kind of python objects."""
+
     _fn_map = {
         dict: DictParser.parse_dict,
         list: ListParser.parse_list,
@@ -108,6 +144,14 @@ class Parser:
 
     @classmethod
     def parse(cls, data: Any) -> Node:
+        """Recursively transforms an object into a visitable AST node.
+
+        Args:
+            data (Any): The object to parse.
+
+        Returns:
+            Node: The parsed Choixe AST node.
+        """
         fn = ObjectNode
         for k, v in cls._fn_map.items():
             if isinstance(data, k):
@@ -117,4 +161,12 @@ class Parser:
 
 
 def parse(data: Any) -> Node:
+    """Recursively transforms an object into a visitable AST node.
+
+    Args:
+        data (Any): The object to parse.
+
+    Returns:
+        Node: The parsed Choixe AST node.
+    """
     return Parser.parse(data)

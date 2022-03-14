@@ -6,8 +6,10 @@ import numpy as np
 
 
 class Decoder(Unparser):
-    def visit_object_node(self, node: ObjectNode) -> Any:
-        data = super().visit_object_node(node)
+    """Specialization of the `Unparser` for the decode operation."""
+
+    def visit_object(self, node: ObjectNode) -> Any:
+        data = super().visit_object(node)
         if isinstance(data, np.ndarray):
             return data.tolist()
         elif "numpy" in str(type(data)):
@@ -17,4 +19,14 @@ class Decoder(Unparser):
 
 
 def decode(node: Node) -> Any:
+    """A special unparsing operation that also converts some object types like numpy
+    arrays into built-in lists that are supported by common markup formats like yaml and
+    json.
+
+    Args:
+        node (Node): The Choixe AST node to decode.
+
+    Returns:
+        List[Tuple[List[Union[str, int]], Any]]: The decoded unparsed node.
+    """
     return node.accept(Decoder())
