@@ -10,6 +10,7 @@ from cioics.ast.nodes import (
     EnvNode,
     IdNode,
     ImportNode,
+    InstanceNode,
     ListNode,
     Node,
     NodeVisitor,
@@ -19,6 +20,7 @@ from cioics.ast.nodes import (
     VarNode,
 )
 from cioics.ast.parser import parse
+from cioics.utils.imports import import_symbol
 from cioics.utils.io import load
 from cioics.visitors.unparser import unparse
 
@@ -121,6 +123,14 @@ class Processor(NodeVisitor):
             return cases
         else:
             return [unparse(node)]
+
+    def visit_instance(self, node: InstanceNode) -> Any:
+        branches = list(product(node.symbol.accept(self), node.args.accept(self)))
+        data = []
+        for symbol, args in branches:
+            fn = import_symbol(symbol)
+            data.append(fn(**args))
+        return data
 
 
 def process(

@@ -5,6 +5,7 @@ from cioics.ast.nodes import (
     EnvNode,
     IdNode,
     ImportNode,
+    InstanceNode,
     ListNode,
     Node,
     NodeVisitor,
@@ -13,6 +14,7 @@ from cioics.ast.nodes import (
     SweepNode,
     VarNode,
 )
+from cioics.ast.parser import DIRECTIVE_PREFIX
 
 
 class Unparser(NodeVisitor):
@@ -41,22 +43,28 @@ class Unparser(NodeVisitor):
 
     def visit_sweep(self, node: SweepNode) -> str:
         body = self._unparse_as_args(*node.cases)
-        return f"$sweep({body})"
+        return f"{DIRECTIVE_PREFIX}sweep({body})"
 
     def visit_var(self, node: VarNode) -> str:
         default_str = ""
         if node.default is not None:
             default_str = f", default={self._unparse_as_arg(node.default)}"
-        return f"$var({node.identifier.accept(self)}{default_str})"
+        return f"{DIRECTIVE_PREFIX}var({node.identifier.accept(self)}{default_str})"
 
     def visit_env(self, node: EnvNode) -> str:
         default_str = ""
         if node.default is not None:
             default_str = f", default={self._unparse_as_arg(node.default)}"
-        return f"$env({node.identifier.accept(self)}{default_str})"
+        return f"{DIRECTIVE_PREFIX}env({node.identifier.accept(self)}{default_str})"
 
     def visit_import(self, node: ImportNode) -> str:
-        return f'$import("{node.path.accept(self)}")'
+        return f'{DIRECTIVE_PREFIX}import("{node.path.accept(self)}")'
+
+    def visit_instance(self, node: InstanceNode) -> Dict[str, Any]:
+        return {
+            f"{DIRECTIVE_PREFIX}call": node.symbol.accept(self),
+            f"{DIRECTIVE_PREFIX}args": node.args.accept(self),
+        }
 
     def _unparse_as_arg(self, node: Node) -> str:
         unparsed = node.accept(self)

@@ -47,6 +47,9 @@ class NodeVisitor:  # pragma: no cover
     def visit_sweep(self, node: SweepNode) -> Any:
         return node
 
+    def visit_instance(self, node: InstanceNode) -> Any:
+        return node
+
 
 class Node(ABC):
     """A generic element of the Choixe AST, all nodes must implement this interface."""
@@ -71,7 +74,7 @@ class HashNode(Node):
     immutable structure and can generally be used as a dictionary key."""
 
     @abstractmethod
-    def _hash(self) -> int:
+    def _hash(self) -> int:  # pragma: no cover
         """Returns the hash of this object. Called by __hash__ method."""
         pass
 
@@ -275,3 +278,31 @@ class SweepNode(HashNode):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"SweepNode({self.cases})"
+
+
+class InstanceNode(Node):
+    def __init__(self, symbol: ObjectNode, args: DictNode) -> None:
+        super().__init__()
+        self._symbol = symbol
+        self._args = args
+
+    @property
+    def symbol(self) -> ObjectNode:
+        return self._symbol
+
+    @property
+    def args(self) -> DictNode:
+        return self._args
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_instance(self)
+
+    def __repr__(self) -> str:
+        return f"InstanceNode({self.symbol}, {self.args})"
+
+    def __eq__(self, __o: object) -> bool:
+        return (
+            isinstance(__o, InstanceNode)
+            and self.symbol == __o.symbol
+            and self.args == __o.args
+        )

@@ -1,10 +1,29 @@
+from __future__ import annotations
+
 import os
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+from typing import Union
 
 from cioics.ast.parser import parse
 from cioics.utils.io import load
 from cioics.visitors import process
 from deepdiff import DeepDiff
+
+
+# @dataclass(eq=True)
+# class MyCompositeClass:
+#     a: Union[MyCompositeClass, int]
+#     b: Union[MyCompositeClass, int]
+
+
+class MyCompositeClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def __eq__(self, __o: object) -> bool:
+        return __o.a == self.a and __o.b == self.b
 
 
 class TestProcessor:
@@ -158,3 +177,43 @@ class TestProcessor:
             {"bar": "bob", "beta": 20},
         ]
         self._expectation_test(data, expected)
+
+    def test_instance(self):
+        data = {
+            "$call": f"{__file__}:MyCompositeClass",
+            "$args": {
+                "a": {
+                    "$call": f"{__file__}:MyCompositeClass",
+                    "$args": {
+                        "a": 10,
+                        "b": 20,
+                    },
+                },
+                "b": {
+                    "$call": f"{__file__}:MyCompositeClass",
+                    "$args": {
+                        "a": {
+                            "$call": f"{__file__}:MyCompositeClass",
+                            "$args": {
+                                "a": 30,
+                                "b": 40,
+                            },
+                        },
+                        "b": {
+                            "$call": f"{__file__}:MyCompositeClass",
+                            "$args": {
+                                "a": 50,
+                                "b": 60,
+                            },
+                        },
+                    },
+                },
+            },
+        }
+        expected = [
+            MyCompositeClass(
+                MyCompositeClass(10, 20),
+                MyCompositeClass(MyCompositeClass(30, 40), MyCompositeClass(50, 60)),
+            )
+        ]
+        assert process(parse(data)) == expected

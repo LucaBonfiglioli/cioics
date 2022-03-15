@@ -6,6 +6,7 @@ from cioics.ast.nodes import (
     EnvNode,
     IdNode,
     ImportNode,
+    InstanceNode,
     ListNode,
     Node,
     ObjectNode,
@@ -81,6 +82,35 @@ from deepdiff import DeepDiff
         [
             ListNode(ObjectNode(10), ObjectNode(-0.25), ListNode(ObjectNode("aa"))),
             [10, -0.25, ["aa"]],
+        ],
+        [
+            InstanceNode(
+                ObjectNode("path/to_my/file.py"),
+                DictNode(
+                    {
+                        ObjectNode("arg1"): InstanceNode(
+                            ObjectNode("module.submodule.function"),
+                            DictNode(
+                                {
+                                    ObjectNode("a"): ListNode(
+                                        ObjectNode(1), ObjectNode(2)
+                                    ),
+                                    ObjectNode("b"): ObjectNode(100),
+                                }
+                            ),
+                        )
+                    }
+                ),
+            ),
+            {
+                "$call": "path/to_my/file.py",
+                "$args": {
+                    "arg1": {
+                        "$call": "module.submodule.function",
+                        "$args": {"a": [1, 2], "b": 100},
+                    }
+                },
+            },
         ],
     ],
 )

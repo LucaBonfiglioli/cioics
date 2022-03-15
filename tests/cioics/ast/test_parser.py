@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 
 import pytest
@@ -6,6 +8,7 @@ from cioics.ast.nodes import (
     EnvNode,
     IdNode,
     ImportNode,
+    InstanceNode,
     ListNode,
     ObjectNode,
     StrBundleNode,
@@ -15,7 +18,7 @@ from cioics.ast.nodes import (
 from cioics.ast.parser import parse
 
 
-class TestDictParser:
+class TestParser:
     def test_parse_dict(self):
         expr = {"a": 10, "b": {"c": 10.0, "d": "hello"}}
         expected = DictNode(
@@ -31,8 +34,6 @@ class TestDictParser:
         )
         assert parse(expr) == expected
 
-
-class TestListParser:
     def test_parse_list(self):
         expr = [1, 2, 3, ("foo", "bar", [10.0, 10])]
         expected = ListNode(
@@ -45,6 +46,41 @@ class TestListParser:
                 ListNode(ObjectNode(10.0), ObjectNode(10)),
             ),
         )
+        assert parse(expr) == expected
+
+    def test_parse_instance(self):
+        expr = {
+            "$call": "path/to/a/script.py:ClassName",
+            "$args": {
+                "a": 10,
+                "b": {
+                    "$call": "some.interesting.module.MyClass",
+                    "$args": {
+                        "foo": "hello",
+                        "bar": "world",
+                    },
+                },
+            },
+        }
+        expected = InstanceNode(
+            ObjectNode("path/to/a/script.py:ClassName"),
+            DictNode(
+                {
+                    ObjectNode("a"): ObjectNode(10),
+                    ObjectNode("b"): InstanceNode(
+                        ObjectNode("some.interesting.module.MyClass"),
+                        DictNode(
+                            {
+                                ObjectNode("foo"): ObjectNode("hello"),
+                                ObjectNode("bar"): ObjectNode("world"),
+                            }
+                        ),
+                    ),
+                }
+            ),
+        )
+        print(parse(expr))
+        print(expected)
         assert parse(expr) == expected
 
 
