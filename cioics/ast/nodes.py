@@ -281,6 +281,9 @@ class SweepNode(HashNode):
 
 
 class InstanceNode(Node):
+    """An `InstanceNode` represents a Choixe instance block to get the result of a
+    generic python callable object."""
+
     def __init__(self, symbol: ObjectNode, args: DictNode) -> None:
         super().__init__()
         self._symbol = symbol
@@ -288,10 +291,12 @@ class InstanceNode(Node):
 
     @property
     def symbol(self) -> ObjectNode:
+        """Getter for the callable symbol"""
         return self._symbol
 
     @property
     def args(self) -> DictNode:
+        """Getter for the callable arguments"""
         return self._args
 
     def accept(self, visitor: NodeVisitor) -> Any:
