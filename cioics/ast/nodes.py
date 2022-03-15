@@ -306,3 +306,77 @@ class InstanceNode(Node):
             and self.symbol == __o.symbol
             and self.args == __o.args
         )
+
+
+class ForNode(Node):
+    def __init__(
+        self, iterable: IdNode, identifier: IdNode, mode: IdNode = IdNode("list")
+    ) -> None:
+        super().__init__()
+        self._iterable = iterable
+        self._identifier = identifier
+        self._mode = mode
+
+    @property
+    def iterable(self) -> IdNode:
+        return self._iterable
+
+    @property
+    def identifier(self) -> IdNode:
+        return self._identifier
+
+    @property
+    def mode(self) -> IdNode:
+        return self._mode
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_for(self)
+
+    def __repr__(self) -> str:
+        return f"ForNode({self.iterable}, {self.identifier}, {self.mode})"
+
+    def __eq__(self, __o: object) -> bool:
+        return (
+            isinstance(__o, ForNode)
+            and __o.iterable == self.iterable
+            and __o.identifier == self.identifier
+            and __o.mode == self.mode
+        )
+
+
+class IndexNode(HashNode):
+    def __init__(self, identifier: IdNode) -> None:
+        super().__init__()
+        self._identifier = identifier
+
+    @property
+    def identifier(self) -> IdNode:
+        return self._identifier
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_index(self)
+
+    def _hash(self) -> int:
+        return hash(self.identifier)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"IndexNode({self.identifier})"
+
+
+class ItemNode(HashNode):
+    def __init__(self, identifier: IdNode) -> None:
+        super().__init__()
+        self._identifier = identifier
+
+    @property
+    def identifier(self) -> IdNode:
+        return self._identifier
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_item(self)
+
+    def _hash(self) -> int:
+        return hash(self.identifier)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"ItemNode({self.identifier})"
