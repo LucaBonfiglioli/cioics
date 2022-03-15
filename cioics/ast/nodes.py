@@ -297,7 +297,7 @@ class InstanceNode(Node):
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_instance(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"InstanceNode({self.symbol}, {self.args})"
 
     def __eq__(self, __o: object) -> bool:

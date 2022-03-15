@@ -79,8 +79,6 @@ class TestParser:
                 }
             ),
         )
-        print(parse(expr))
-        print(expected)
         assert parse(expr) == expected
 
 
