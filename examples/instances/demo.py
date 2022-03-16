@@ -8,7 +8,7 @@ this_folder = Path(__file__).parent
 
 
 # Load an XConfig
-cfg = XConfig(this_folder / "config.yml")
+cfg = XConfig.from_file(this_folder / "config.yml")
 
 rich.print("Loaded XConfig: ")
 rich.print(cfg.to_dict())
