@@ -1,5 +1,6 @@
 import importlib
 import uuid
+from pathlib import Path
 from typing import Any
 
 
@@ -7,6 +8,7 @@ def import_symbol(symbol_path: str) -> Any:
     try:
         if ":" in symbol_path:
             module_path, _, symbol_name = symbol_path.rpartition(":")
+            module_path = str(Path(module_path).absolute())
             spec = importlib.util.spec_from_file_location(uuid.uuid4().hex, module_path)
             module_ = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module_)

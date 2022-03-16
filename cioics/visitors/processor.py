@@ -124,7 +124,7 @@ class Processor(NodeVisitor):
         else:
             return [unparse(node)]
 
-    def visit_instance(self, node: InstanceNode) -> Any:
+    def visit_instance(self, node: InstanceNode) -> List[Any]:
         branches = list(product(node.symbol.accept(self), node.args.accept(self)))
         data = []
         for symbol, args in branches:

@@ -1,0 +1,13 @@
+# Example XConfig file
+my_object: 
+  $call: "my_class.py:MyClass"
+  $args:
+    a: 10
+    b: 
+      $call: "my_class.py:MyClass"
+      $args: 
+        a: 
+          $call: numpy.ones
+          $args:
+            shape: [2, 3, 4]
+        b: 19
