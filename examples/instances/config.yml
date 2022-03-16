@@ -1,10 +1,10 @@
 # Example XConfig file
 my_object: 
-  $call: "my_class.py:MyClass"
+  $call: "scripts/my_class2.py:MyClass2"
   $args:
     a: 10
     b: 
-      $call: "my_class.py:MyClass"
+      $call: "scripts/my_class.py:MyClass"
       $args: 
         a: 
           $call: numpy.ones
