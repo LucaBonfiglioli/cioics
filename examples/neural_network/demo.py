@@ -21,7 +21,7 @@ context = {
 }
 
 # Load an XConfig
-cfg = XConfig(this_folder / "neural_network.yml")
+cfg = XConfig.from_file(this_folder / "neural_network.yml")
 
 rich.print("Loaded XConfig: ")
 rich.print(cfg.to_dict())

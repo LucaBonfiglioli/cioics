@@ -4,7 +4,7 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 class sys_path(ContextDecorator):
@@ -18,14 +18,19 @@ class sys_path(ContextDecorator):
         sys.path.pop(0)
 
 
-def import_symbol(symbol_path: str) -> Any:
+def import_symbol(symbol_path: str, cwd: Optional[Path] = None) -> Any:
+    cwd = Path(os.getcwd()) if cwd is None else cwd
     try:
         if ":" in symbol_path:
             module_path, _, symbol_name = symbol_path.rpartition(":")
-            module_path = str(Path(module_path).resolve())
-            with sys_path(Path(module_path).parent):
+
+            module_path = Path(module_path)
+            if not module_path.is_absolute():
+                module_path = cwd / module_path
+
+            with sys_path(module_path.parent):
                 id_ = uuid.uuid4().hex
-                spec = importlib.util.spec_from_file_location(id_, module_path)
+                spec = importlib.util.spec_from_file_location(id_, str(module_path))
                 module_ = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module_)
         else:

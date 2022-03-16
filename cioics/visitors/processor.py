@@ -128,7 +128,7 @@ class Processor(NodeVisitor):
         branches = list(product(node.symbol.accept(self), node.args.accept(self)))
         data = []
         for symbol, args in branches:
-            fn = import_symbol(symbol)
+            fn = import_symbol(symbol, cwd=self._cwd)
             data.append(fn(**args))
         return data
 

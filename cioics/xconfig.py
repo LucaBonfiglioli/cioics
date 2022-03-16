@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import pydash as py_
 from box import Box
@@ -16,40 +16,51 @@ from cioics.visitors import decode, process, walk
 class XConfig(Box):
     """A configuration with superpowers!"""
 
-    PRIVATE_KEYS = ["_filename", "_schema"]
+    PRIVATE_KEYS = ["_cwd", "_schema"]
     """Keys to exclude in visiting operations"""
 
     def __init__(
         self,
-        filename: Optional[Union[str, Path]] = None,
-        plain_dict: Optional[Dict] = None,
+        data: Optional[Dict] = None,
+        cwd: Optional[Path] = None,
         schema: Optional[Schema] = None,
     ):
         """Constructor for `XConfig`
 
         Args:
-            filename (Optional[Union[str, Path]], optional): An optional path to load
-            the configuration from a file. Supported formats include yaml and json.
-            Defaults to None.
-            plain_dict (Optional[Dict], optional): An optional dict, in case the data
-            is already loaded. Defaults to None.
+            data (Optional[Dict], optional): Optional dictionary containing
+            initial data. Defaults to None.
+            cwd (Optional[Path], optional): An optional path with the current working
+            directory to use when resolving relative imports. If set to None, the
+            system current working directory will be used. Defaults to None.
             schema (Optional[Schema], optional): Python schema object used for
             validation. Defaults to None.
         """
 
         # options
-        self._filename = Path(filename) if filename is not None else None
+        self._cwd = cwd
         self._schema = None
 
-        if plain_dict is not None:
-            data = plain_dict
-        elif self._filename is not None:
-            data = load(self._filename)
-        else:
-            data = {}
+        data = data if data is not None else {}
+        assert isinstance(data, Mapping), f"Unsupported type {data.__class__}"
 
         self.update(data)
         self.set_schema(schema)
+
+    @classmethod
+    def from_file(
+        cls, path: Union[str, Path], schema: Optional[Schema] = None
+    ) -> XConfig:
+        """Factory method to create a `XConfig` from file.
+
+        :param path: Path to a markup file from which to load the data
+        :type path: Union[str, Path]
+        :param schema: Python schema object used for validation, defaults to None
+        :type schema: Optional[Schema], optional
+        :return: The loaded `XConfig`
+        :rtype: XConfig
+        """
+        return XConfig(data=load(Path(path)), cwd=path.parent, schema=schema)
 
     def get_schema(self) -> Optional[Schema]:
         """Getter for the configuration schema"""
@@ -61,9 +72,9 @@ class XConfig(Box):
             assert isinstance(s, Schema), "schema is not a valid Schema object!"
         self._schema = s
 
-    def get_filename(self) -> Optional[Path]:
-        """Getter for the configuration filename"""
-        return self._filename
+    def get_cwd(self) -> Optional[Path]:
+        """Getter for the configuration cwd"""
+        return self._cwd
 
     def copy(self) -> XConfig:
         """Prototype method to copy this `XConfig` object.
@@ -72,9 +83,7 @@ class XConfig(Box):
             XConfig: A deepcopy of this `XConfig`.
         """
         return XConfig(
-            filename=self.get_filename(),
-            plain_dict=self.to_dict(),
-            schema=self.get_schema(),
+            data=self.to_dict(), cwd=self.get_cwd(), schema=self.get_schema()
         )
 
     def validate(self, replace: bool = True):
@@ -106,9 +115,7 @@ class XConfig(Box):
         Args:
             filename (str): output filename
         """
-        filename = Path(filename)
-        data = decode(self.parse())
-        dump(data, filename)
+        dump(self.to_dict(), Path(filename))
 
     def deep_get(
         self, full_key: Union[str, list], default: Optional[Any] = None
@@ -189,11 +196,15 @@ class XConfig(Box):
     def _process(
         self, context: Optional[Dict[str, Any]] = None, allow_branching: bool = True
     ) -> List[XConfig]:
-        cwd = self._filename.parent if self._filename is not None else None
         data = process(
-            self.parse(), context=context, cwd=cwd, allow_branching=allow_branching
+            self.parse(),
+            context=context,
+            cwd=self.get_cwd(),
+            allow_branching=allow_branching,
         )
-        return [XConfig(filename=self._filename, plain_dict=x) for x in data]
+        return [
+            XConfig(data=x, cwd=self.get_cwd(), schema=self.get_schema()) for x in data
+        ]
 
     def process(self, context: Optional[Dict[str, Any]] = None) -> XConfig:
         """Process this XConfig without branching.
