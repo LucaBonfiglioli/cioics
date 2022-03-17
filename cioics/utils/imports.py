@@ -1,8 +1,8 @@
-from contextlib import ContextDecorator
 import importlib
+import importlib.util
 import os
 import sys
-import uuid
+from contextlib import ContextDecorator
 from pathlib import Path
 from typing import Any, Optional
 
@@ -29,7 +29,7 @@ def import_symbol(symbol_path: str, cwd: Optional[Path] = None) -> Any:
                 module_path = cwd / module_path
 
             with sys_path(module_path.parent):
-                id_ = uuid.uuid4().hex
+                id_ = "__main__"
                 spec = importlib.util.spec_from_file_location(id_, str(module_path))
                 module_ = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module_)

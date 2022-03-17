@@ -1,24 +1,25 @@
 import ast
-from dataclasses import dataclass
 import re
-from typing import Any, Dict, List, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple, Union
 
 from cioics.ast.nodes import (
+    DictNode,
     EnvNode,
     ForNode,
-    ImportNode,
-    InstanceNode,
-    Node,
-    DictNode,
-    ListNode,
-    ObjectNode,
     IdNode,
+    ImportNode,
+    IndexNode,
+    InstanceNode,
+    ItemNode,
+    ListNode,
+    Node,
+    ObjectNode,
     StrBundleNode,
     SweepNode,
     VarNode,
 )
-from schema import Schema, And
-
+from schema import Schema
 
 DIRECTIVE_PREFIX = "$"
 """Prefix used at the start of all Choixe directives."""
@@ -31,15 +32,15 @@ class Token:
     kwargs: Dict[str, Node]
 
 
-class StrParser:
-    """Parser of python str objects."""
+class Scanner:
+    """Choixe Scanner of python str objects."""
 
     DIRECTIVE_RE = (
         rf"(?:\$[^\)\( \.\,\$]+\([^\(\)]*\))|(?:\$[^\)\( \.\,\$]+)|(?:[^\$]*)"
     )
     """Regex used to check if a string is a Choixe directive."""
 
-    def _parse_argument(
+    def _scan_argument(
         self, py_arg: Union[ast.Constant, ast.Attribute, ast.Name]
     ) -> Node:
         if isinstance(py_arg, ast.Constant):
@@ -52,7 +53,7 @@ class StrParser:
         else:
             raise NotImplementedError(py_arg.__class__)
 
-    def _parse_directive(self, code: str) -> Token:
+    def _scan_directive(self, code: str) -> Token:
         py_ast = ast.parse(f"_{code}")  # Add "_" to avoid conflicts with python
         assert isinstance(py_ast, ast.Module)
         py_expr = py_ast.body[0].value
@@ -70,16 +71,16 @@ class StrParser:
 
         args = []
         for py_arg in py_args:
-            args.append(self._parse_argument(py_arg))
+            args.append(self._scan_argument(py_arg))
 
         kwargs = {}
         for py_kwarg in py_kwargs:
             key, value = py_kwarg.arg, py_kwarg.value
-            kwargs[key] = self._parse_argument(value)
+            kwargs[key] = self._scan_argument(value)
 
         return Token(token_name, args, kwargs)
 
-    def parse_str(self, data: str) -> List[Token]:
+    def scan(self, data: str) -> List[Token]:
         """Transforms a string into a list of parsed tokens.
 
         Args:
@@ -94,7 +95,7 @@ class StrParser:
             if len(token) == 0:
                 continue
             if token.startswith(DIRECTIVE_PREFIX):
-                token = self._parse_directive(token[len(DIRECTIVE_PREFIX) :])
+                token = self._scan_directive(token[len(DIRECTIVE_PREFIX) :])
             else:
                 token = Token("str", [token], {})
             res.append(token)
@@ -106,7 +107,7 @@ class Parser:
     """Choixe parser for all kind of python objects."""
 
     def __init__(self) -> None:
-        self._str_parser = StrParser()
+        self._scanner = Scanner()
         self._type_map = {
             dict: self._parse_dict,
             list: self._parse_list,
@@ -118,9 +119,7 @@ class Parser:
             Schema(
                 {self._token_schema("call"): str, self._token_schema("args"): dict}
             ): self._parse_instance,
-            Schema(
-                {self._token_schema("for", IdNode, IdNode, mode=IdNode): object}
-            ): self._parse_for,
+            Schema({self._token_schema("for"): object}): self._parse_for,
         }
 
         self._directive_map = {
@@ -129,28 +128,32 @@ class Parser:
             "import": ImportNode,
             "sweep": SweepNode,
             "str": ObjectNode,
+            "index": IndexNode,
+            "item": ItemNode,
         }
 
-    def _token_schema(self, name: str, *args, **kwargs) -> Schema:
-        def validate(x: str):
-            token = self._str_parser.parse_str(x)[0]
-            args_schema = Schema(list(args))
-            kwargs_schema = Schema(dict(kwargs))
-            return (
-                token.name == name
-                and args_schema.is_valid(token.args)
-                and kwargs_schema.is_valid(token.kwargs)
-            )
+    def _token_schema(self, name: str) -> Schema:
+        return Schema(lambda x: self._scanner.scan(x)[0].name == name)
 
-        return Schema(validate)
+    def _key_value_pairs_by_token_name(
+        self, data: Dict[str, Any]
+    ) -> Dict[str, Tuple[Token, Any]]:
+        res = {}
+        for k, v in data.items():
+            token = self._scanner.scan(k)[0]
+            res[token.name] = (token, v)
+        return res
 
     def _parse_instance(self, data: dict) -> InstanceNode:
-        classpath = ObjectNode(data[f"{DIRECTIVE_PREFIX}call"])
-        args = self.parse(data[f"{DIRECTIVE_PREFIX}args"])
-        return InstanceNode(classpath, args)
+        pairs = self._key_value_pairs_by_token_name(data)
+        symbol = ObjectNode(pairs["call"][1])
+        args = self.parse(pairs["args"][1])
+        return InstanceNode(symbol, args)
 
     def _parse_for(self, data: dict) -> ForNode:
-        pass
+        pairs = self._key_value_pairs_by_token_name(data)
+        loop, body = pairs["for"]
+        return ForNode(*loop.args, **loop.kwargs, body=self.parse(body))
 
     def _parse_dict(self, data: dict) -> DictNode:
         for schema, fn in self._dict_schemas.items():
@@ -164,7 +167,7 @@ class Parser:
 
     def _parse_str(self, data: str) -> Node:
         nodes = []
-        for token in self._str_parser.parse_str(data):
+        for token in self._scanner.scan(data):
             if token.name not in self._directive_map:
                 raise NotImplementedError(token.name)
             node = self._directive_map[token.name](*token.args, **token.kwargs)

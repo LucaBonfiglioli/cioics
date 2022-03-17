@@ -6,9 +6,12 @@ import pytest
 from cioics.ast.nodes import (
     DictNode,
     EnvNode,
+    ForNode,
     IdNode,
     ImportNode,
+    IndexNode,
     InstanceNode,
+    ItemNode,
     ListNode,
     ObjectNode,
     StrBundleNode,
@@ -18,7 +21,7 @@ from cioics.ast.nodes import (
 from cioics.ast.parser import parse
 
 
-class TestParser:
+class TestParse:
     def test_parse_dict(self):
         expr = {"a": 10, "b": {"c": 10.0, "d": "hello"}}
         expected = DictNode(
@@ -81,8 +84,23 @@ class TestParser:
         )
         assert parse(expr) == expected
 
+    def test_parse_for(self):
+        expr = {"$for(iterable, x)": {"node_$index(x)": "Hello_$item(x)"}}
+        expected = ForNode(
+            IdNode("iterable"),
+            IdNode("x"),
+            DictNode(
+                {
+                    StrBundleNode(
+                        ObjectNode("node_"), IndexNode(IdNode("x"))
+                    ): StrBundleNode(ObjectNode("Hello_"), ItemNode(IdNode("x")))
+                }
+            ),
+        )
+        assert parse(expr) == expected
 
-class TestStrParser:
+
+class TestStringParse:
     def test_simple(self):
         expr = "I am a string"
         assert parse(expr) == ObjectNode(expr)
@@ -125,6 +143,8 @@ class TestStrParser:
         )
         assert parse(expr) == expected
 
+
+class TestParserRaise:
     def test_unknown_directive(self):
         expr = "$unknown_directive(lots, of, params=10)"
         with pytest.raises(NotImplementedError):
@@ -133,4 +153,17 @@ class TestStrParser:
     def test_arg_too_complex(self):
         expr = "$sweep(lots, of, [arguments, '10'])"
         with pytest.raises(NotImplementedError):
+            parse(expr)
+
+    @pytest.mark.parametrize(
+        ["expr"],
+        [
+            ["$env(f.dd111])"],
+            ["I am a string with $import(ba[a)"],
+            ["$var(invalid syntax ::) that raises syntaxerror"],
+            ["$a+b a"],
+        ],
+    )
+    def test_syntax_error(self, expr: str):
+        with pytest.raises(SyntaxError):
             parse(expr)
