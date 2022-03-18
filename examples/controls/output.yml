@@ -1,0 +1,18 @@
+alice:
+  cat_0:
+    index: I am cat number 0
+    name: My name is Luna
+  cat_1:
+    index: I am cat number 1
+    name: My name is Milo
+  cat_2:
+    index: I am cat number 2
+    name: My name is Oliver
+bob:
+- I am cat number 0
+- My name is Luna
+- I am cat number 1
+- My name is Milo
+- I am cat number 2
+- My name is Oliver
+charlie: 'Cat_0=Luna Cat_1=Milo Cat_2=Oliver '

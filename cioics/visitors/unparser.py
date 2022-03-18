@@ -3,9 +3,12 @@ from typing import Any, Dict, List
 from cioics.ast.nodes import (
     DictNode,
     EnvNode,
+    ForNode,
     IdNode,
     ImportNode,
+    IndexNode,
     InstanceNode,
+    ItemNode,
     ListNode,
     Node,
     NodeVisitor,
@@ -42,29 +45,35 @@ class Unparser(NodeVisitor):
         return node.name
 
     def visit_sweep(self, node: SweepNode) -> str:
-        body = self._unparse_as_args(*node.cases)
-        return f"{DIRECTIVE_PREFIX}sweep({body})"
+        return self._unparse_as_call("sweep", *node.cases)
 
     def visit_var(self, node: VarNode) -> str:
-        default_str = ""
-        if node.default is not None:
-            default_str = f", default={self._unparse_as_arg(node.default)}"
-        return f"{DIRECTIVE_PREFIX}var({node.identifier.accept(self)}{default_str})"
+        kwargs = {"default": node.default} if node.default is not None else {}
+        return self._unparse_as_call("var", node.identifier, **kwargs)
 
     def visit_env(self, node: EnvNode) -> str:
-        default_str = ""
-        if node.default is not None:
-            default_str = f", default={self._unparse_as_arg(node.default)}"
-        return f"{DIRECTIVE_PREFIX}env({node.identifier.accept(self)}{default_str})"
+        kwargs = {"default": node.default} if node.default is not None else {}
+        return self._unparse_as_call("env", node.identifier, **kwargs)
 
     def visit_import(self, node: ImportNode) -> str:
-        return f'{DIRECTIVE_PREFIX}import("{node.path.accept(self)}")'
+        return self._unparse_as_call("import", node.path)
 
     def visit_instance(self, node: InstanceNode) -> Dict[str, Any]:
         return {
-            f"{DIRECTIVE_PREFIX}call": node.symbol.accept(self),
-            f"{DIRECTIVE_PREFIX}args": node.args.accept(self),
+            self._unparse_compact("call"): node.symbol.accept(self),
+            self._unparse_compact("args"): node.args.accept(self),
         }
+
+    def visit_for(self, node: ForNode) -> Any:
+        key = self._unparse_as_call("for", node.iterable, node.identifier)
+        value = node.body.accept(self)
+        return {key: value}
+
+    def visit_item(self, node: ItemNode) -> Any:
+        return self._unparse_as_call("item", node.identifier)
+
+    def visit_index(self, node: IndexNode) -> Any:
+        return self._unparse_as_call("index", node.identifier)
 
     def _unparse_as_arg(self, node: Node) -> str:
         unparsed = node.accept(self)
@@ -78,6 +87,20 @@ class Unparser(NodeVisitor):
 
     def _unparse_as_args(self, *nodes: Node) -> str:
         return ", ".join([self._unparse_as_arg(x) for x in nodes])
+
+    def _unparse_as_kwargs(self, **nodes: Node) -> str:
+        return ", ".join([f"{k}={self._unparse_as_arg(v)}" for k, v in nodes.items()])
+
+    def _unparse_compact(self, name: str) -> str:
+        return f"{DIRECTIVE_PREFIX}{name}"
+
+    def _unparse_as_call(self, name: str, *args: Node, **kwargs: Node) -> str:
+        parts = []
+        if len(args) > 0:
+            parts.append(self._unparse_as_args(*args))
+        if len(kwargs) > 0:
+            parts.append(self._unparse_as_kwargs(**kwargs))
+        return f"{self._unparse_compact(name)}({', '.join(parts)})"
 
 
 def unparse(node: Node) -> Any:

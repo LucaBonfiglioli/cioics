@@ -51,6 +51,15 @@ class NodeVisitor:  # pragma: no cover
     def visit_instance(self, node: InstanceNode) -> Any:
         return node
 
+    def visit_for(self, node: ForNode) -> Any:
+        return node
+
+    def visit_index(self, node: IndexNode) -> Any:
+        return node
+
+    def visit_item(self, node: ItemNode) -> Any:
+        return node
+
 
 class Node(ABC):
     """A generic element of the Choixe AST, all nodes must implement this interface."""
@@ -197,6 +206,9 @@ class InstanceNode(Node):
 
 @dataclass
 class ForNode(Node):
+    """A `ForNode` represents a Choixe for loop that iterates over a collection picked
+    from the context. A for loop also has an string identifier, that mast be a valid
+    python id."""
 
     iterable: IdNode
     identifier: IdNode
@@ -208,6 +220,7 @@ class ForNode(Node):
 
 @dataclass(eq=False)
 class IndexNode(HashNode):
+    """An `IndexNode` represents the index of the current iteration of a for loop."""
 
     identifier: IdNode
 
@@ -217,6 +230,7 @@ class IndexNode(HashNode):
 
 @dataclass(eq=False)
 class ItemNode(HashNode):
+    """An `ItemNode` represents the item of the current iteration of a for loop."""
 
     identifier: IdNode
 

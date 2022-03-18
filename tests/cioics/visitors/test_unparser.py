@@ -4,9 +4,12 @@ import pytest
 from cioics.ast.nodes import (
     DictNode,
     EnvNode,
+    ForNode,
     IdNode,
     ImportNode,
+    IndexNode,
     InstanceNode,
+    ItemNode,
     ListNode,
     Node,
     ObjectNode,
@@ -111,6 +114,21 @@ from deepdiff import DeepDiff
                     }
                 },
             },
+        ],
+        [
+            ForNode(
+                IdNode("my.var"),
+                IdNode("x"),
+                DictNode(
+                    {
+                        ObjectNode("Hello"): ObjectNode("World"),
+                        StrBundleNode(
+                            ObjectNode("Number_"), IndexNode(IdNode("x"))
+                        ): ItemNode(IdNode("x")),
+                    }
+                ),
+            ),
+            {"$for(my.var, x)": {"Hello": "World", "Number_$index(x)": "$item(x)"}},
         ],
     ],
 )

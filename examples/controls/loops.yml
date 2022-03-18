@@ -1,0 +1,16 @@
+alice:
+    # For loop that merges the resulting dictionaries
+    '$for(params.cats, x)':
+        cat_$index(x):
+            index: I am cat number $index(x)
+            name: My name is $item(x)
+    
+bob:
+    # For loop that extends the resulting list
+    '$for(params.cats, x)':
+        - I am cat number $index(x)
+        - My name is $item(x)
+
+charlie:
+    # For loop that concats the resulting strings
+    '$for(params.cats, x)': "Cat_$index(x)=$item(x) "

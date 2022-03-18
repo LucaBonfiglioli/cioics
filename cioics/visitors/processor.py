@@ -1,16 +1,20 @@
+from dataclasses import dataclass
 import os
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pydash as py_
 from cioics.ast.nodes import (
     DictNode,
     EnvNode,
+    ForNode,
     IdNode,
     ImportNode,
+    IndexNode,
     InstanceNode,
+    ItemNode,
     ListNode,
     Node,
     NodeVisitor,
@@ -23,6 +27,12 @@ from cioics.ast.parser import parse
 from cioics.utils.imports import import_symbol
 from cioics.utils.io import load
 from cioics.visitors.unparser import unparse
+
+
+@dataclass
+class LoopInfo:
+    index: int
+    item: Any
 
 
 class Processor(NodeVisitor):
@@ -49,6 +59,8 @@ class Processor(NodeVisitor):
         self._context = context if context is not None else {}
         self._cwd = cwd if cwd is not None else Path(os.getcwd())
         self._allow_branching = allow_branching
+
+        self._loop_data: Dict[str, LoopInfo] = {}
 
     def visit_dict(self, node: DictNode) -> List[Dict]:
         data = [{}]
@@ -84,7 +96,7 @@ class Processor(NodeVisitor):
             N = len(data)
             data *= len(branches)
             for i in range(len(data)):
-                data[i] += branches[i // N]
+                data[i] += str(branches[i // N])
         return data
 
     def visit_id(self, node: IdNode) -> List[Any]:
@@ -131,6 +143,36 @@ class Processor(NodeVisitor):
             fn = import_symbol(symbol, cwd=self._cwd)
             data.append(fn(**args))
         return data
+
+    def visit_for(self, node: ForNode) -> List[Any]:
+        iterable = node.iterable.accept(self)[0]
+        id_ = node.identifier.name
+
+        branches = []
+        for i, x in enumerate(iterable):
+            self._loop_data[id_] = LoopInfo(i, x)
+            branches.append(node.body.accept(self))
+
+        branches = list(product(*branches))
+
+        for i, branch in enumerate(branches):
+            if isinstance(node.body, DictNode):
+                res = {}
+                [res.update(item) for item in branch]
+            elif isinstance(node.body, ListNode):
+                res = []
+                [res.extend(item) for item in branch]
+            else:
+                res = "".join([str(item) for item in branch])
+            branches[i] = res
+
+        return branches
+
+    def visit_index(self, node: IndexNode) -> List[Any]:
+        return [self._loop_data[node.identifier.name].index]
+
+    def visit_item(self, node: ItemNode) -> List[Any]:
+        return [self._loop_data[node.identifier.name].item]
 
 
 def process(

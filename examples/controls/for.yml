@@ -1,7 +1,0 @@
-alice: 
-    foo: 10
-    bar: 
-        '$for(x, params.cats, mode=list)':
-            cat_$index(x):
-                index: I am cat number $index(x)
-                name: My name is $item(x)
