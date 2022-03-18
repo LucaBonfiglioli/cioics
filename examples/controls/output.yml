@@ -1,11 +1,14 @@
 alice:
   cat_0:
+    age: My age is 5
     index: I am cat number 0
     name: My name is Luna
   cat_1:
+    age: My age is 6
     index: I am cat number 1
     name: My name is Milo
   cat_2:
+    age: My age is 14
     index: I am cat number 2
     name: My name is Oliver
 bob:
@@ -15,4 +18,4 @@ bob:
 - My name is Milo
 - I am cat number 2
 - My name is Oliver
-charlie: 'Cat_0=Luna Cat_1=Milo Cat_2=Oliver '
+charlie: 'Cat_0=5 Cat_1=6 Cat_2=14 '

@@ -3,14 +3,15 @@ alice:
     '$for(params.cats, x)':
         cat_$index(x):
             index: I am cat number $index(x)
-            name: My name is $item(x)
+            name: My name is $item(x.name)
+            age: My age is $item(x.age)
     
 bob:
     # For loop that extends the resulting list
     '$for(params.cats, x)':
         - I am cat number $index(x)
-        - My name is $item(x)
+        - My name is $item(x.name)
 
 charlie:
     # For loop that concats the resulting strings
-    '$for(params.cats, x)': "Cat_$index(x)=$item(x) "
+    '$for(params.cats, x)': "Cat_$index(x)=$item(x.age) "

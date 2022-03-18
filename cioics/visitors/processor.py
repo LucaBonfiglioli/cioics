@@ -172,7 +172,9 @@ class Processor(NodeVisitor):
         return [self._loop_data[node.identifier.name].index]
 
     def visit_item(self, node: ItemNode) -> List[Any]:
-        return [self._loop_data[node.identifier.name].item]
+        sep = "."
+        loop_id, _, key = node.identifier.name.partition(sep)
+        return [py_.get(self._loop_data[loop_id].item, f"{sep}{key}")]
 
 
 def process(

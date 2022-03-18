@@ -7,7 +7,15 @@ from cioics import XConfig
 this_folder = Path(__file__).parent
 
 # Load an XConfig
-context = {"params": {"cats": ["Luna", "Milo", "Oliver"]}}
+context = {
+    "params": {
+        "cats": [
+            {"name": "Luna", "age": 5},
+            {"name": "Milo", "age": 6},
+            {"name": "Oliver", "age": 14},
+        ]
+    }
+}
 cfg = XConfig.from_file(this_folder / "loops.yml")
 
 # Process
