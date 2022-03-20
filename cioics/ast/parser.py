@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple, Union
 
 from cioics.ast.nodes import (
     DictNode,
-    EnvNode,
     ForNode,
     IdNode,
     ImportNode,
@@ -124,7 +123,6 @@ class Parser:
 
         self._directive_map = {
             "var": VarNode,
-            "env": EnvNode,
             "import": ImportNode,
             "sweep": SweepNode,
             "str": ObjectNode,

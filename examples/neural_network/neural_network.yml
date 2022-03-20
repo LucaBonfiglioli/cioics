@@ -31,4 +31,4 @@ training:
   optimizer: $import("optimizer.yml")
 
   # Pick the training device from a system environment variable
-  device: $env(TRAINING_DEVICE, default="cpu")
+  device: $var(TRAINING_DEVICE, default="cpu", env=True)

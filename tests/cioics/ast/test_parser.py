@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 from cioics.ast.nodes import (
     DictNode,
-    EnvNode,
     ForNode,
     IdNode,
     ImportNode,
@@ -106,22 +105,19 @@ class TestStringParse:
         assert parse(expr) == ObjectNode(expr)
 
     @pytest.mark.parametrize(
-        ["id_", "default"],
-        [["var1", 10], ["var1.var2", "hello"], ["var.var.var", 10.0]],
+        ["id_", "default", "env"],
+        [
+            ["var1", 10, False],
+            ["var1.var2", "hello", True],
+            ["var.var.var", 10.0, True],
+        ],
     )
-    def test_var(self, id_: Any, default: Any):
+    def test_var(self, id_: Any, default: Any, env: bool):
         default_str = f'"{default}"' if isinstance(default, str) else default
-        expr = f"$var({id_}, default={default_str})"
-        assert parse(expr) == VarNode(IdNode(id_), default=ObjectNode(default))
-
-    @pytest.mark.parametrize(
-        ["id_", "default"],
-        [["env1", 42], ["env1.env2", "hello"], ["env.env.env", 25.0]],
-    )
-    def test_env(self, id_: Any, default: Any):
-        default_str = f'"{default}"' if isinstance(default, str) else default
-        expr = f"$env({id_}, default={default_str})"
-        assert parse(expr) == EnvNode(IdNode(id_), default=ObjectNode(default))
+        expr = f"$var({id_}, default={default_str}, env={env})"
+        assert parse(expr) == VarNode(
+            IdNode(id_), default=ObjectNode(default), env=ObjectNode(env)
+        )
 
     def test_import(self):
         path = "path/to/my/file.json"
@@ -158,7 +154,7 @@ class TestParserRaise:
     @pytest.mark.parametrize(
         ["expr"],
         [
-            ["$env(f.dd111])"],
+            ["$var(f.dd111])"],
             ["I am a string with $import(ba[a)"],
             ["$var(invalid syntax ::) that raises syntaxerror"],
             ["$a+b a"],

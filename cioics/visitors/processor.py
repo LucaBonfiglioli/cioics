@@ -1,14 +1,13 @@
-from dataclasses import dataclass
 import os
 from copy import deepcopy
+from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pydash as py_
 from cioics.ast.nodes import (
     DictNode,
-    EnvNode,
     ForNode,
     IdNode,
     ImportNode,
@@ -103,29 +102,23 @@ class Processor(NodeVisitor):
         return [py_.get(self._context, node.name)]
 
     def visit_var(self, node: VarNode) -> List[Any]:
-        branches = [node.default]
+        default = None
         if node.default is not None:
-            branches = node.default.accept(self)
-        return [py_.get(self._context, node.identifier.name, x) for x in branches]
+            default = node.default.accept(self)[0]
 
-    def visit_env(self, node: EnvNode) -> List[Any]:
-        branches = [node.default]
-        if node.default is not None:
-            branches = node.default.accept(self)
-        return [os.getenv(node.identifier.name, default=x) for x in branches]
+        if node.env is not None and node.env.accept(self)[0]:
+            default = os.getenv(node.identifier.name, default=default)
+
+        return [py_.get(self._context, node.identifier.name, default)]
 
     def visit_import(self, node: ImportNode) -> List[Any]:
-        branches = node.path.accept(self)
-        data = []
-        for branch in branches:
-            path = Path(branch)
-            if not path.is_absolute():
-                path = self._cwd / path
+        path = Path(node.path.accept(self)[0])
+        if not path.is_absolute():
+            path = self._cwd / path
 
-            subdata = load(path)
-            parsed = parse(subdata)
-            data.extend(parsed.accept(self))
-        return data
+        subdata = load(path)
+        parsed = parse(subdata)
+        return parsed.accept(self)
 
     def visit_sweep(self, node: SweepNode) -> List[Any]:
         if self._allow_branching:

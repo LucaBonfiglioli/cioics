@@ -39,9 +39,6 @@ class NodeVisitor:  # pragma: no cover
     def visit_var(self, node: VarNode) -> Any:
         return node
 
-    def visit_env(self, node: EnvNode) -> Any:
-        return node
-
     def visit_import(self, node: ImportNode) -> Any:
         return node
 
@@ -155,17 +152,10 @@ class VarNode(HashNode):
 
     identifier: IdNode
     default: Optional[ObjectNode] = None
+    env: Optional[ObjectNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_var(self)
-
-
-class EnvNode(VarNode):
-    """An `EnvNode` represents a Choixe environment variable. It is a special type of
-    variable and therefore, it has an id and a default value."""
-
-    def accept(self, visitor: NodeVisitor) -> Any:
-        return visitor.visit_env(self)
 
 
 @dataclass

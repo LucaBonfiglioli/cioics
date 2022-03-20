@@ -36,7 +36,7 @@ class TestProcessor:
         "collection3": list(range(50, 52)),
         "collection4": [str(x) for x in range(100, 102)],
     }
-    env = {"color.hue": "yellow", "animal": "snake"}
+    env = {"VAR1": "yellow", "VAR2": "snake"}
 
     def _expectation_test(self, data, expected, allow_branching: bool = True) -> None:
         for k, v in self.env.items():
@@ -68,23 +68,22 @@ class TestProcessor:
         self._expectation_test(data, expected)
 
     def test_env_plain(self):
-        data = "$env(color.hue, default='blue')"
+        data = "$var(VAR1, default='blue', env=True)"
         expected = ["yellow"]
         self._expectation_test(data, expected)
 
     def test_env_missing(self):
-        data = "$env(color.sat, default=25)"
+        data = "$var(color.sat, default=25, env=True)"
         expected = [25]
         self._expectation_test(data, expected)
 
     def test_env_str_bundle(self):
-        data = {"a": "I am a $env(color.hue) $env(animal)"}
+        data = {"a": "I am a $var(VAR1, env=True) $var(VAR2, env=True)"}
         expected = [{"a": "I am a yellow snake"}]
         self._expectation_test(data, expected)
 
     def test_import_plain(self, plain_cfg: Path):
         path_str = str(PurePosixPath(plain_cfg)).replace("\\", "/")  # Windows please...
-        print(path_str)
         data = {"a": f'$import("{path_str}")'}
         expected = [{"a": load(plain_cfg)}]
         self._expectation_test(data, expected)

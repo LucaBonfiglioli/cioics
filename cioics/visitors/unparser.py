@@ -2,7 +2,6 @@ from typing import Any, Dict, List
 
 from cioics.ast.nodes import (
     DictNode,
-    EnvNode,
     ForNode,
     IdNode,
     ImportNode,
@@ -48,12 +47,12 @@ class Unparser(NodeVisitor):
         return self._unparse_as_call("sweep", *node.cases)
 
     def visit_var(self, node: VarNode) -> str:
-        kwargs = {"default": node.default} if node.default is not None else {}
+        kwargs = {}
+        if node.default is not None:
+            kwargs["default"] = node.default
+        if node.env is not None:
+            kwargs["env"] = node.env
         return self._unparse_as_call("var", node.identifier, **kwargs)
-
-    def visit_env(self, node: EnvNode) -> str:
-        kwargs = {"default": node.default} if node.default is not None else {}
-        return self._unparse_as_call("env", node.identifier, **kwargs)
 
     def visit_import(self, node: ImportNode) -> str:
         return self._unparse_as_call("import", node.path)
