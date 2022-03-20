@@ -118,7 +118,13 @@ class Processor(NodeVisitor):
 
         subdata = load(path)
         parsed = parse(subdata)
-        return parsed.accept(self)
+
+        old_cwd = self._cwd
+        self._cwd = path.parent
+        nested = parsed.accept(self)
+        self._cwd = old_cwd
+
+        return nested
 
     def visit_sweep(self, node: SweepNode) -> List[Any]:
         if self._allow_branching:

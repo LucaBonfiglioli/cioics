@@ -25,9 +25,15 @@ cfg = XConfig.from_file(this_folder / "neural_network.yml")
 
 rich.print("Loaded XConfig: ")
 rich.print(cfg.to_dict())
+rich.print("")
 
 rich.print("Parsed XConfig: ")
 rich.print(cfg.parse())
+rich.print("")
+
+rich.print("Inspected XConfig: ")
+rich.print(cfg.inspect())
+rich.print("")
 
 # Process the configuration, replacing variables, importing files, performing sweeps, etc...
 all_cfgs = cfg.process_all(context=context)
@@ -36,4 +42,5 @@ all_cfgs = cfg.process_all(context=context)
 for i, x in enumerate(all_cfgs):
     path = this_folder / "outputs" / f"output_{str(i).zfill(4)}.yml"
     rich.print(f"Saving a configuration to {path}")
+    rich.print(f"Inspected output: {x.inspect()}")
     x.save_to(path)

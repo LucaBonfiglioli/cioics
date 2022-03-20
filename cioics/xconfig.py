@@ -10,7 +10,7 @@ from schema import Schema
 from cioics.ast.nodes import Node
 from cioics.ast.parser import parse
 from cioics.utils.io import dump, load
-from cioics.visitors import decode, process, walk
+from cioics.visitors import decode, process, walk, inspect, Inspection
 
 
 class XConfig(Box):
@@ -229,3 +229,6 @@ class XConfig(Box):
             List[XConfig]: A list of all processing outcomes.
         """
         return self._process(context=context, allow_branching=True)
+
+    def inspect(self) -> Inspection:
+        return inspect(self.parse(), cwd=self.get_cwd())

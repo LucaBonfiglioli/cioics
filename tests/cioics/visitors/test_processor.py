@@ -1,21 +1,12 @@
 from __future__ import annotations
-from cmath import exp
 
 import os
-from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Union
 
 from cioics.ast.parser import parse
 from cioics.utils.io import load
 from cioics.visitors import process
 from deepdiff import DeepDiff
-
-
-# @dataclass(eq=True)
-# class MyCompositeClass:
-#     a: Union[MyCompositeClass, int]
-#     b: Union[MyCompositeClass, int]
 
 
 class MyCompositeClass:

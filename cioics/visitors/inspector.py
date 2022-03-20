@@ -1,0 +1,123 @@
+from __future__ import annotations
+
+import os
+import warnings
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, Optional, Set
+
+import pydash as py_
+from cioics.ast.nodes import (
+    DictNode,
+    ForNode,
+    IdNode,
+    ImportNode,
+    IndexNode,
+    InstanceNode,
+    ItemNode,
+    ListNode,
+    Node,
+    NodeVisitor,
+    ObjectNode,
+    StrBundleNode,
+    SweepNode,
+    VarNode,
+)
+from cioics.ast.parser import parse
+from cioics.utils.io import load
+
+
+@dataclass
+class Inspection:
+    imports: Set[Path] = field(default_factory=set)
+    variables: Dict[str, Any] = field(default_factory=dict)
+    environ: Dict[str, Any] = field(default_factory=dict)
+    symbols: Set[str] = field(default_factory=set)
+    processed: bool = False
+
+    def __add__(self, other: Inspection) -> Inspection:
+        return Inspection(
+            imports={*self.imports, *other.imports},
+            variables=py_.merge(self.variables, other.variables),
+            environ={**self.environ, **other.environ},
+            symbols={*self.symbols, *other.symbols},
+            processed=self.processed and other.processed,
+        )
+
+
+class Inspector(NodeVisitor):
+    def __init__(self, cwd: Optional[Path] = None) -> None:
+        super().__init__()
+        self._cwd = cwd if cwd is not None else Path(os.getcwd())
+
+    def visit_dict(self, node: DictNode) -> Inspection:
+        inspections = []
+        for k, v in node.nodes.items():
+            inspections.append(k.accept(self))
+            inspections.append(v.accept(self))
+        return sum(inspections, start=Inspection(processed=True))
+
+    def visit_list(self, node: ListNode) -> Inspection:
+        start = Inspection(processed=True)
+        return sum([x.accept(self) for x in node.nodes], start=start)
+
+    def visit_object(self, node: ObjectNode) -> Inspection:
+        return Inspection(processed=True)
+
+    def visit_str_bundle(self, node: StrBundleNode) -> Inspection:
+        start = Inspection(processed=True)
+        return sum([x.accept(self) for x in node.nodes], start=start)
+
+    def visit_id(self, node: IdNode) -> Inspection:
+        variable = py_.set_({}, node.name, None)
+        return Inspection(variables=variable)
+
+    def visit_var(self, node: VarNode) -> Inspection:
+        default = None if node.default is None else node.default.data
+        variables = py_.set_({}, node.identifier.name, default)
+
+        environ = {}
+        if node.env is not None and node.env.data:
+            environ[node.identifier.name] = default
+
+        return Inspection(variables=variables, environ=environ)
+
+    def visit_import(self, node: ImportNode) -> Inspection:
+        path = Path(node.path.data)
+        if not path.is_absolute():
+            path = self._cwd / path
+
+        if path.exists():
+            subdata = load(path)
+            parsed = parse(subdata)
+
+            old_cwd = self._cwd
+            self._cwd = path.parent
+            nested = parsed.accept(self)
+            self._cwd = old_cwd
+        else:
+            warnings.warn(f"Cannot complete inspection: file {path} is missing.")
+            nested = Inspection()
+
+        return Inspection(imports={Path(path).resolve()}) + nested
+
+    def visit_sweep(self, node: SweepNode) -> Inspection:
+        start = Inspection(processed=True)
+        return sum([x.accept(self) for x in node.cases], start=start)
+
+    def visit_instance(self, node: InstanceNode) -> Inspection:
+        return Inspection(symbols={str(node.symbol.data)}) + node.args.accept(self)
+
+    def visit_for(self, node: ForNode) -> Inspection:
+        return node.iterable.accept(self) + node.body.accept(self)
+
+    def visit_index(self, node: IndexNode) -> Inspection:
+        return Inspection()
+
+    def visit_item(self, node: ItemNode) -> Inspection:
+        return Inspection()
+
+
+def inspect(node: Node, cwd: Optional[Path] = None) -> Inspection:
+    inspector = Inspector(cwd=cwd)
+    return node.accept(inspector)

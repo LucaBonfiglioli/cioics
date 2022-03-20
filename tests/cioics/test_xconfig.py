@@ -7,6 +7,7 @@ from schema import Or, Schema, Use
 from cioics.ast.parser import parse
 from cioics.utils.io import load
 from cioics.visitors import process, walk
+from cioics.visitors.inspector import Inspection
 from cioics.xconfig import XConfig
 
 
@@ -122,3 +123,9 @@ class TestXConfig:
         processed_expected = process(parse(load(plain_cfg)), allow_branching=True)
         for a, b in zip(processed, processed_expected):
             assert not DeepDiff(a.to_dict(), b)
+
+    def test_inspect(self, plain_cfg: Path):
+        cfg = XConfig.from_file(plain_cfg)
+        inspection = cfg.inspect()
+        expected = Inspection(processed=True)
+        assert inspection == expected

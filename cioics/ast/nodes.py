@@ -126,9 +126,9 @@ class ObjectNode(HashNode):
 class StrBundleNode(HashNode):
     """A `StrBundleNode` represents a concatenation of a sequence of strings."""
 
-    nodes: List[ObjectNode]
+    nodes: List[HashNode]
 
-    def __init__(self, *nodes: ObjectNode) -> None:
+    def __init__(self, *nodes: HashNode) -> None:
         super().__init__()
         self.nodes = nodes
 
