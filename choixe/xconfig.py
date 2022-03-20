@@ -7,10 +7,10 @@ import pydash as py_
 from box import Box
 from schema import Schema
 
-from cioics.ast.nodes import Node
-from cioics.ast.parser import parse
-from cioics.utils.io import dump, load
-from cioics.visitors import decode, process, walk, inspect, Inspection
+from choixe.ast.nodes import Node
+from choixe.ast.parser import parse
+from choixe.utils.io import dump, load
+from choixe.visitors import decode, process, walk, inspect, Inspection
 
 
 class XConfig(Box):

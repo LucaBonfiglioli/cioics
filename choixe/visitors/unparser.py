@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from cioics.ast.nodes import (
+from choixe.ast.nodes import (
     DictNode,
     ForNode,
     IdNode,
@@ -16,7 +16,7 @@ from cioics.ast.nodes import (
     SweepNode,
     VarNode,
 )
-from cioics.ast.parser import DIRECTIVE_PREFIX
+from choixe.ast.parser import DIRECTIVE_PREFIX
 
 
 class Unparser(NodeVisitor):

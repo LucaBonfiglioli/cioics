@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from cioics.utils.io import dump, load
+from choixe.utils.io import dump, load
 
 data = {
     "alice": 10,

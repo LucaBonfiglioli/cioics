@@ -1,7 +1,7 @@
 from typing import Any
 
-from cioics.ast.nodes import Node, ObjectNode
-from cioics.visitors.unparser import Unparser
+from choixe.ast.nodes import Node, ObjectNode
+from choixe.visitors.unparser import Unparser
 import numpy as np
 
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, List, Sequence, Tuple, Union
 
-from cioics.ast.nodes import DictNode, ListNode, Node
-from cioics.visitors.unparser import Unparser
+from choixe.ast.nodes import DictNode, ListNode, Node
+from choixe.visitors.unparser import Unparser
 
 
 @dataclass

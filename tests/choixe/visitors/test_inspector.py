@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 import pytest
-from cioics.ast.parser import parse
-from cioics.visitors import Inspection, inspect
+from choixe.ast.parser import parse
+from choixe.visitors import Inspection, inspect
 
 
 class TestInspector:

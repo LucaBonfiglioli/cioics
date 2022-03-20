@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import cioics
+import choixe
 import pytest
-from cioics.utils.imports import import_symbol
+from choixe.utils.imports import import_symbol
 
 
 def test_import_symbol_fn():
@@ -20,7 +20,7 @@ def test_import_symbol_cls():
 
 
 def test_import_symbol_path():
-    file_path = Path(cioics.__file__).parent / "ast" / "nodes.py"
+    file_path = Path(choixe.__file__).parent / "ast" / "nodes.py"
     res = import_symbol(f"{str(file_path)}:SweepNode")
     assert res.__name__ == "SweepNode"
 
@@ -32,6 +32,6 @@ def test_import_symbol_raise():
     with pytest.raises(ImportError):
         import_symbol("file_that_does_not_exist.py:AAAAAA")
 
-    file_path = Path(cioics.__file__).parent / "ast" / "nodes.py"
+    file_path = Path(choixe.__file__).parent / "ast" / "nodes.py"
     with pytest.raises(ImportError):
         import_symbol(f"{str(file_path)}:HolyPinoly")

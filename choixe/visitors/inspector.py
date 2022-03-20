@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Set
 
 import pydash as py_
-from cioics.ast.nodes import (
+from choixe.ast.nodes import (
     DictNode,
     ForNode,
     IdNode,
@@ -23,8 +23,8 @@ from cioics.ast.nodes import (
     SweepNode,
     VarNode,
 )
-from cioics.ast.parser import parse
-from cioics.utils.io import load
+from choixe.ast.parser import parse
+from choixe.utils.io import load
 
 
 @dataclass

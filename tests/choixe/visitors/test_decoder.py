@@ -2,8 +2,8 @@ from typing import Any
 
 import numpy as np
 import pytest
-from cioics.ast.nodes import DictNode, ListNode, Node, ObjectNode
-from cioics.visitors import decode
+from choixe.ast.nodes import DictNode, ListNode, Node, ObjectNode
+from choixe.visitors import decode
 from deepdiff import DeepDiff
 
 

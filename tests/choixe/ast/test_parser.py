@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from cioics.ast.nodes import (
+from choixe.ast.nodes import (
     DictNode,
     ForNode,
     IdNode,
@@ -17,7 +17,7 @@ from cioics.ast.nodes import (
     SweepNode,
     VarNode,
 )
-from cioics.ast.parser import parse
+from choixe.ast.parser import parse
 
 
 class TestParse:

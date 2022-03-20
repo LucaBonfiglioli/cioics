@@ -4,11 +4,11 @@ from pathlib import Path
 from deepdiff import DeepDiff
 from schema import Or, Schema, Use
 
-from cioics.ast.parser import parse
-from cioics.utils.io import load
-from cioics.visitors import process, walk
-from cioics.visitors.inspector import Inspection
-from cioics.xconfig import XConfig
+from choixe.ast.parser import parse
+from choixe.utils.io import load
+from choixe.visitors import process, walk
+from choixe.visitors.inspector import Inspection
+from choixe.xconfig import XConfig
 
 
 class TestXConfig:

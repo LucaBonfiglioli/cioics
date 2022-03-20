@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import rich
-from cioics import XConfig
+from choixe import XConfig
 
 # Path to the folder containing this file
 this_folder = Path(__file__).parent

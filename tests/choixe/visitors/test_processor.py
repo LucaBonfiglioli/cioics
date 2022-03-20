@@ -3,9 +3,9 @@ from __future__ import annotations
 import os
 from pathlib import Path, PurePosixPath
 
-from cioics.ast.parser import parse
-from cioics.utils.io import load
-from cioics.visitors import process
+from choixe.ast.parser import parse
+from choixe.utils.io import load
+from choixe.visitors import process
 from deepdiff import DeepDiff
 
 

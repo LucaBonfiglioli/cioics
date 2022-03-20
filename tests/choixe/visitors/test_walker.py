@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from cioics.ast.nodes import (
+from choixe.ast.nodes import (
     DictNode,
     ListNode,
     Node,
@@ -10,7 +10,7 @@ from cioics.ast.nodes import (
     VarNode,
     IdNode,
 )
-from cioics.visitors import walk
+from choixe.visitors import walk
 from deepdiff import DeepDiff
 
 
