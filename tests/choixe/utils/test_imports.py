@@ -26,12 +26,15 @@ def test_import_symbol_path():
 
 
 def test_import_symbol_raise():
+    # Non existing module
     with pytest.raises(ImportError):
         import_symbol("rich.console.SomethingThatDoesNotExist")
 
+    # Non existing path
     with pytest.raises(ImportError):
         import_symbol("file_that_does_not_exist.py:AAAAAA")
 
+    # Non existing object
     file_path = Path(choixe.__file__).parent / "ast" / "nodes.py"
     with pytest.raises(ImportError):
         import_symbol(f"{str(file_path)}:HolyPinoly")
