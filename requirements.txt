@@ -1,3 +1,4 @@
-choixe
 deepdiff
 rich
+pydantic
+schema

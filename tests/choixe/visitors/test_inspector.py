@@ -49,6 +49,10 @@ class TestInspector:
                 Inspection(symbols={"numpy.array"}),
             ],
             [
+                {"$model": "path/to/my_file.py:MyModel", "$args": {"shape": [4, 3, 2]}},
+                Inspection(symbols={"path/to/my_file.py:MyModel"}),
+            ],
+            [
                 {"$for(var.x.y, x)": {"$index(x)": "$item(x)"}},
                 Inspection(variables={"var": {"x": {"y": None}}}),
             ],

@@ -12,6 +12,7 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    ModelNode,
     Node,
     ObjectNode,
     StrBundleNode,
@@ -118,6 +119,9 @@ class Parser:
             Schema(
                 {self._token_schema("call"): str, self._token_schema("args"): dict}
             ): self._parse_instance,
+            Schema(
+                {self._token_schema("model"): str, self._token_schema("args"): dict}
+            ): self._parse_model,
             Schema({self._token_schema("for"): object}): self._parse_for,
         }
 
@@ -147,6 +151,12 @@ class Parser:
         symbol = ObjectNode(pairs["call"][1])
         args = self.parse(pairs["args"][1])
         return InstanceNode(symbol, args)
+
+    def _parse_model(self, data: dict) -> ModelNode:
+        pairs = self._key_value_pairs_by_token_name(data)
+        symbol = ObjectNode(pairs["model"][1])
+        args = self.parse(pairs["args"][1])
+        return ModelNode(symbol, args)
 
     def _parse_for(self, data: dict) -> ForNode:
         pairs = self._key_value_pairs_by_token_name(data)

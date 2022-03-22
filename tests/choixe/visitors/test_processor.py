@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path, PurePosixPath
+from typing import Tuple
 
 from choixe.ast.parser import parse
 from choixe.utils.io import load
 from choixe.visitors import process
 from deepdiff import DeepDiff
+from pydantic import BaseModel
 
 
 class MyCompositeClass:
@@ -16,6 +18,18 @@ class MyCompositeClass:
 
     def __eq__(self, __o: object) -> bool:
         return __o.a == self.a and __o.b == self.b
+
+
+class MyModel2(BaseModel):
+    a: int
+    b: str
+
+
+class MyModel(BaseModel):
+    a: int
+    b: float
+    c: Tuple[int, float]
+    d: Tuple[MyModel2, MyModel2]
 
 
 class TestProcessor:
@@ -212,6 +226,26 @@ class TestProcessor:
             MyCompositeClass(
                 MyCompositeClass(10, 20),
                 MyCompositeClass(MyCompositeClass(30, 40), MyCompositeClass(50, 60)),
+            )
+        ]
+        assert process(parse(data)) == expected
+
+    def test_model(self):
+        data = {
+            "$model": f"{__file__}:MyModel",
+            "$args": {
+                "a": 10,
+                "b": 0.1,
+                "c": [20, 0.32],
+                "d": [{"a": 98, "b": "hello"}, {"a": 24, "b": "world"}],
+            },
+        }
+        expected = [
+            MyModel(
+                a=10,
+                b=0.1,
+                c=(20, 0.32),
+                d=(MyModel2(a=98, b="hello"), MyModel2(a=24, b="world")),
             )
         ]
         assert process(parse(data)) == expected

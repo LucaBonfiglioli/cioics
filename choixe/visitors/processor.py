@@ -15,6 +15,7 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    ModelNode,
     Node,
     NodeVisitor,
     ObjectNode,
@@ -136,12 +137,14 @@ class Processor(NodeVisitor):
             return [unparse(node)]
 
     def visit_instance(self, node: InstanceNode) -> List[Any]:
-        branches = list(product(node.symbol.accept(self), node.args.accept(self)))
-        data = []
-        for symbol, args in branches:
-            fn = import_symbol(symbol, cwd=self._cwd)
-            data.append(fn(**args))
-        return data
+        symbol = node.symbol.data
+        branches = node.args.accept(self)
+        return [import_symbol(symbol, cwd=self._cwd)(**x) for x in branches]
+
+    def visit_model(self, node: ModelNode) -> Any:
+        symbol = node.symbol.data
+        branches = node.args.accept(self)
+        return [import_symbol(symbol, cwd=self._cwd).parse_obj(x) for x in branches]
 
     def visit_for(self, node: ForNode) -> List[Any]:
         iterable = node.iterable.accept(self)[0]

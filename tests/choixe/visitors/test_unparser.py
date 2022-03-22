@@ -10,6 +10,7 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    ModelNode,
     Node,
     ObjectNode,
     StrBundleNode,
@@ -89,7 +90,7 @@ from deepdiff import DeepDiff
         ],
         [
             InstanceNode(
-                ObjectNode("path/to_my/file.py"),
+                ObjectNode("path/to_my/file.py:MyClass"),
                 DictNode(
                     {
                         ObjectNode("arg1"): InstanceNode(
@@ -107,13 +108,32 @@ from deepdiff import DeepDiff
                 ),
             ),
             {
-                "$call": "path/to_my/file.py",
+                "$call": "path/to_my/file.py:MyClass",
                 "$args": {
                     "arg1": {
                         "$call": "module.submodule.function",
                         "$args": {"a": [1, 2], "b": 100},
                     }
                 },
+            },
+        ],
+        [
+            ModelNode(
+                ObjectNode("path/to_my/file.py:MyModel"),
+                DictNode(
+                    {
+                        ObjectNode("arg1"): DictNode(
+                            {
+                                ObjectNode("a"): ListNode(ObjectNode(1), ObjectNode(2)),
+                                ObjectNode("b"): ObjectNode(100),
+                            }
+                        ),
+                    }
+                ),
+            ),
+            {
+                "$model": "path/to_my/file.py:MyModel",
+                "$args": {"arg1": {"a": [1, 2], "b": 100}},
             },
         ],
         [

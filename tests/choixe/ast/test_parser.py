@@ -12,6 +12,7 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    ModelNode,
     ObjectNode,
     StrBundleNode,
     SweepNode,
@@ -77,6 +78,33 @@ class TestParse:
                                 ObjectNode("bar"): ObjectNode("world"),
                             }
                         ),
+                    ),
+                }
+            ),
+        )
+        assert parse(expr) == expected
+
+    def test_parse_model(self):
+        expr = {
+            "$model": "path/to/a/script.py:ModelName",
+            "$args": {
+                "a": 10,
+                "b": {
+                    "foo": "hello",
+                    "bar": "world",
+                },
+            },
+        }
+        expected = ModelNode(
+            ObjectNode("path/to/a/script.py:ModelName"),
+            DictNode(
+                {
+                    ObjectNode("a"): ObjectNode(10),
+                    ObjectNode("b"): DictNode(
+                        {
+                            ObjectNode("foo"): ObjectNode("hello"),
+                            ObjectNode("bar"): ObjectNode("world"),
+                        }
                     ),
                 }
             ),

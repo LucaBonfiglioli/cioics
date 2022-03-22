@@ -1,8 +1,9 @@
 from typing import Any
 
+import numpy as np
 from choixe.ast.nodes import Node, ObjectNode
 from choixe.visitors.unparser import Unparser
-import numpy as np
+from pydantic import BaseModel
 
 
 class Decoder(Unparser):
@@ -14,6 +15,9 @@ class Decoder(Unparser):
             return data.tolist()
         elif "numpy" in str(type(data)):
             return data.item()
+        elif isinstance(data, BaseModel):
+            symbol = f"{data.__module__}.{data.__class__.__qualname__}"
+            return {"$model": symbol, "$args": data.dict()}
         else:
             return data
 

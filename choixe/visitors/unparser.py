@@ -9,6 +9,7 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    ModelNode,
     Node,
     NodeVisitor,
     ObjectNode,
@@ -63,7 +64,13 @@ class Unparser(NodeVisitor):
             self._unparse_compact("args"): node.args.accept(self),
         }
 
-    def visit_for(self, node: ForNode) -> Any:
+    def visit_model(self, node: ModelNode) -> Dict[str, Any]:
+        return {
+            self._unparse_compact("model"): node.symbol.accept(self),
+            self._unparse_compact("args"): node.args.accept(self),
+        }
+
+    def visit_for(self, node: ForNode) -> Dict[str, Any]:
         key = self._unparse_as_call("for", node.iterable, node.identifier)
         value = node.body.accept(self)
         return {key: value}

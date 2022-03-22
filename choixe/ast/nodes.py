@@ -48,6 +48,9 @@ class NodeVisitor:  # pragma: no cover
     def visit_instance(self, node: InstanceNode) -> Any:
         return node
 
+    def visit_model(self, node: ModelNode) -> Any:
+        return node
+
     def visit_for(self, node: ForNode) -> Any:
         return node
 
@@ -192,6 +195,12 @@ class InstanceNode(Node):
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_instance(self)
+
+
+@dataclass
+class ModelNode(InstanceNode):
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_model(self)
 
 
 @dataclass

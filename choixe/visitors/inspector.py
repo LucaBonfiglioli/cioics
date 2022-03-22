@@ -16,6 +16,7 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    ModelNode,
     Node,
     NodeVisitor,
     ObjectNode,
@@ -107,6 +108,9 @@ class Inspector(NodeVisitor):
 
     def visit_instance(self, node: InstanceNode) -> Inspection:
         return Inspection(symbols={str(node.symbol.data)}) + node.args.accept(self)
+
+    def visit_model(self, node: ModelNode) -> Inspection:
+        return self.visit_instance(node)
 
     def visit_for(self, node: ForNode) -> Inspection:
         return node.iterable.accept(self) + node.body.accept(self)
