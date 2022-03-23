@@ -6,7 +6,7 @@ import yaml
 
 
 def get_extension(path: Path) -> str:
-    """Retunrs the extension of a file, given a path."""
+    """Returns the extension of a file, given a path."""
     return path.name.split(".")[-1]
 
 

@@ -13,5 +13,5 @@ bob:
         - My name is $item(x.name)
 
 charlie:
-    # For loop that concats the resulting strings
+    # For loop that concatenates the resulting strings
     '$for(params.cats, x)': "Cat_$index(x)=$item(x.age) "

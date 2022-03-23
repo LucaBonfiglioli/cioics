@@ -41,10 +41,10 @@ class TestXConfig:
         cfg = XConfig.from_file(plain_cfg)
         save_path = tmp_path / "config.yml"
         cfg.save_to(save_path)
-        recfg = XConfig.from_file(save_path)
+        re_cfg = XConfig.from_file(save_path)
 
-        assert recfg.get_cwd() == save_path.parent
-        assert not DeepDiff(recfg.to_dict(), cfg.to_dict())
+        assert re_cfg.get_cwd() == save_path.parent
+        assert not DeepDiff(re_cfg.to_dict(), cfg.to_dict())
 
     def test_with_schema(self, plain_cfg: Path):
         cfg = XConfig.from_file(plain_cfg)

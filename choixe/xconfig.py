@@ -53,12 +53,13 @@ class XConfig(Box):
     ) -> XConfig:
         """Factory method to create a `XConfig` from file.
 
-        :param path: Path to a markup file from which to load the data
-        :type path: Union[str, Path]
-        :param schema: Python schema object used for validation, defaults to None
-        :type schema: Optional[Schema], optional
-        :return: The loaded `XConfig`
-        :rtype: XConfig
+        Args:
+            path (Union[str, Path]): Path to a markup file from which to load the data
+            schema (Optional[Schema], optional): Python schema object used for
+            validation. Defaults to None.
+
+        Returns:
+            XConfig: The loaded `XConfig`
         """
         return XConfig(data=load(Path(path)), cwd=path.parent, schema=schema)
 

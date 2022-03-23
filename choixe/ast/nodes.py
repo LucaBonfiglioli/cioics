@@ -173,7 +173,7 @@ class ImportNode(Node):
 
 @dataclass(init=False, eq=False)
 class SweepNode(HashNode):
-    """A `SweepNode` represents a Choixe sweep directive from multiple branching opions."""
+    """A `SweepNode` represents a Choixe sweep directive from multiple branching options."""
 
     cases: List[Union[ObjectNode, IdNode]]
 
