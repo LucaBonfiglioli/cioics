@@ -1,12 +1,12 @@
 # Example XConfig file
-my_object: 
+my_object:
   $call: "scripts/my_class2.py:MyClass2"
   $args:
     a: 10
-    b: 
+    b:
       $call: "scripts/my_class.py:MyClass"
-      $args: 
-        a: 
+      $args:
+        a:
           $call: numpy.ones
           $args:
             shape: [2, 3, 4]

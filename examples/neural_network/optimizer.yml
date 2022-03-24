@@ -2,11 +2,10 @@
 
 type: Adam
 params:
-
   # Pick the learning rate from context, at hparams.lr
   learning_rate: $var(hparams.lr)
 
-  betas: 
+  betas:
     - 0.9
 
     # Sweep on second order beta 0.98 and 0.99

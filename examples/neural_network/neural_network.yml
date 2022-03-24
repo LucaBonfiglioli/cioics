@@ -2,7 +2,6 @@
 
 model:
   architecture:
-
     # A sweep on backbone type: resnet18, resnet34 and resnet50
     # Sweeps, like every other directive, can be placed inside a string
     backbone: resnet$sweep("18", "34", "50")
@@ -16,12 +15,10 @@ model:
         # Pick the number of classes from context, at data.num_classes2
         num_classes: $var(data.num_classes2)
 
-  # Leaf Directives like $var and $sweep can be contained in keys 
+  # Leaf Directives like $var and $sweep can be contained in keys
   use_$sweep("batch", "layer")_norm: $var(hparams.normalize)
 
-
 training:
-
   # $var can have default values, in this case, the integer 100
   epochs: $var(hparams.num_epochs, default=100)
 
