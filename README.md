@@ -183,11 +183,13 @@ data:
   num_classes1: 10
   num_classes2: 7
 hparams:
-  normalize: True # Optional
+  normalize: true # Optional
   num_epochs: 100 # Optional
   lr: 0.001 # Optional
-TRAINING_DEVICE: "cuda" # Optional, env
+TRAINING_DEVICE: cuda # Optional, env
 ```
+
+**Contexts** can also be seen as a "meta-configuration" providing an easier and cleaner access to a subset of "public" parameters of a templatized "private" configuration file with lots of details to keep hidden.
 
 ## Imports
 
