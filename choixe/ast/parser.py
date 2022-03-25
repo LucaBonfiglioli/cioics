@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Tuple, Union
 from choixe.ast.nodes import (
     DictNode,
     ForNode,
-    IdNode,
     ImportNode,
     IndexNode,
     InstanceNode,
@@ -47,9 +46,9 @@ class Scanner:
             return ObjectNode(py_arg.value)
         elif isinstance(py_arg, ast.Attribute):
             name = ast.unparse(py_arg)
-            return IdNode(name)
+            return ObjectNode(name)
         elif isinstance(py_arg, ast.Name):
-            return IdNode(py_arg.id)
+            return ObjectNode(py_arg.id)
         else:
             raise NotImplementedError(py_arg.__class__)
 
@@ -115,7 +114,23 @@ class Parser:
             str: self._parse_str,
         }
 
-        self._dict_schemas = {
+        self._call_forms = {
+            "var": VarNode,
+            "import": ImportNode,
+            "sweep": SweepNode,
+            "str": ObjectNode,
+            "index": IndexNode,
+            "item": ItemNode,
+        }
+
+        self._extended_and_special_forms = {
+            Schema(
+                {
+                    self._token_schema("directive"): lambda x: x in self._call_forms,
+                    self._token_schema("args"): list,
+                    self._token_schema("kwargs"): dict,
+                }
+            ): self._parse_extended_form,
             Schema(
                 {self._token_schema("call"): str, self._token_schema("args"): dict}
             ): self._parse_instance,
@@ -123,15 +138,6 @@ class Parser:
                 {self._token_schema("model"): str, self._token_schema("args"): dict}
             ): self._parse_model,
             Schema({self._token_schema("for"): object}): self._parse_for,
-        }
-
-        self._directive_map = {
-            "var": VarNode,
-            "import": ImportNode,
-            "sweep": SweepNode,
-            "str": ObjectNode,
-            "index": IndexNode,
-            "item": ItemNode,
         }
 
     def _token_schema(self, name: str) -> Schema:
@@ -145,6 +151,14 @@ class Parser:
             token = self._scanner.scan(k)[0]
             res[token.name] = (token, v)
         return res
+
+    def _parse_extended_form(self, data: dict) -> Node:
+        pairs = self._key_value_pairs_by_token_name(data)
+        directive_name = pairs["directive"][1]
+        node_type = self._call_forms[directive_name]
+        args = [self.parse(x) for x in pairs["args"][1]]
+        kwargs = {k: self.parse(v) for k, v in pairs["kwargs"][1].items()}
+        return node_type(*args, **kwargs)
 
     def _parse_instance(self, data: dict) -> InstanceNode:
         pairs = self._key_value_pairs_by_token_name(data)
@@ -164,7 +178,7 @@ class Parser:
         return ForNode(*loop.args, **loop.kwargs, body=self.parse(body))
 
     def _parse_dict(self, data: dict) -> DictNode:
-        for schema, fn in self._dict_schemas.items():
+        for schema, fn in self._extended_and_special_forms.items():
             if schema.is_valid(data):
                 return fn(data)
 
@@ -176,9 +190,9 @@ class Parser:
     def _parse_str(self, data: str) -> Node:
         nodes = []
         for token in self._scanner.scan(data):
-            if token.name not in self._directive_map:
+            if token.name not in self._call_forms:
                 raise NotImplementedError(token.name)
-            node = self._directive_map[token.name](*token.args, **token.kwargs)
+            node = self._call_forms[token.name](*token.args, **token.kwargs)
             nodes.append(node)
 
         if len(nodes) == 1:

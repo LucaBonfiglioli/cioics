@@ -33,9 +33,6 @@ class NodeVisitor:  # pragma: no cover
     def visit_str_bundle(self, node: StrBundleNode) -> Any:
         return node
 
-    def visit_id(self, node: IdNode) -> Any:
-        return node
-
     def visit_var(self, node: VarNode) -> Any:
         return node
 
@@ -140,20 +137,10 @@ class StrBundleNode(HashNode):
 
 
 @dataclass(eq=False)
-class IdNode(HashNode):
-    """An `IdNode` represents the id of a variable."""
-
-    name: str
-
-    def accept(self, visitor: NodeVisitor) -> Any:
-        return visitor.visit_id(self)
-
-
-@dataclass(eq=False)
 class VarNode(HashNode):
     """A `VarNode` represents a Choixe variable. It has an id and a default value."""
 
-    identifier: IdNode
+    identifier: ObjectNode
     default: Optional[ObjectNode] = None
     env: Optional[ObjectNode] = None
 
@@ -175,9 +162,9 @@ class ImportNode(Node):
 class SweepNode(HashNode):
     """A `SweepNode` represents a Choixe sweep directive from multiple branching options."""
 
-    cases: List[Union[ObjectNode, IdNode]]
+    cases: List[Node]
 
-    def __init__(self, *cases: Union[ObjectNode, IdNode]) -> None:
+    def __init__(self, *cases: Node) -> None:
         super().__init__()
         self.cases = cases
 
@@ -209,8 +196,8 @@ class ForNode(Node):
     from the context. A for loop also has an string identifier, that mast be a valid
     python id."""
 
-    iterable: IdNode
-    identifier: IdNode
+    iterable: ObjectNode
+    identifier: ObjectNode
     body: Node
 
     def accept(self, visitor: NodeVisitor) -> Any:
@@ -221,7 +208,7 @@ class ForNode(Node):
 class IndexNode(HashNode):
     """An `IndexNode` represents the index of the current iteration of a for loop."""
 
-    identifier: IdNode
+    identifier: ObjectNode
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_index(self)
@@ -231,7 +218,7 @@ class IndexNode(HashNode):
 class ItemNode(HashNode):
     """An `ItemNode` represents the item of the current iteration of a for loop."""
 
-    identifier: IdNode
+    identifier: ObjectNode
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_item(self)

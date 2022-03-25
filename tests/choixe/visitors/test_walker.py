@@ -8,7 +8,6 @@ from choixe.ast.nodes import (
     ObjectNode,
     StrBundleNode,
     VarNode,
-    IdNode,
 )
 from choixe.visitors import walk
 from deepdiff import DeepDiff
@@ -21,10 +20,10 @@ from deepdiff import DeepDiff
         [
             StrBundleNode(
                 ObjectNode("alice "),
-                VarNode(IdNode("foo"), default=ObjectNode("loves")),
+                VarNode(ObjectNode("foo"), default=ObjectNode("loves")),
                 ObjectNode(" bob"),
             ),
-            [([], 'alice $var(foo, default="loves") bob')],
+            [([], "alice $var(foo, default=loves) bob")],
         ],
         [
             DictNode(

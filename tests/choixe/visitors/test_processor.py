@@ -105,7 +105,11 @@ class TestProcessor:
 
     def test_sweep_base(self):
         data = {
-            "a": "$sweep(1096, 20.0, '40', color.hue)",
+            "a": {
+                "$directive": "sweep",
+                "$args": [1096, 20.0, "40", "$var(color.hue)"],
+                "$kwargs": {},
+            },
             "b": {
                 "a": "$sweep('hello')",
                 "b": "$sweep('hello', 'world')",
@@ -135,11 +139,15 @@ class TestProcessor:
 
     def test_sweep_no_branching(self):
         data = {
-            "a": '$sweep(1096, 20.0, "40", color.hue)',
+            "a": {
+                "$directive": "sweep",
+                "$args": [1096, 20.0, "40", "$var(color.hue)"],
+                "$kwargs": {},
+            },
             "b": {
-                "a": '$sweep("hello")',
-                "b": '$sweep("hello", "world")',
-                "c": '$sweep("hello", "world")',
+                "a": "$sweep(hello)",
+                "b": "$sweep(hello, world)",
+                "c": "$sweep(hello, world)",
                 "d": 10,
             },
         }

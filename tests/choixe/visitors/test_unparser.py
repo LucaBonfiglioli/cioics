@@ -4,7 +4,6 @@ import pytest
 from choixe.ast.nodes import (
     DictNode,
     ForNode,
-    IdNode,
     ImportNode,
     IndexNode,
     InstanceNode,
@@ -27,38 +26,40 @@ from deepdiff import DeepDiff
         [ObjectNode(10), 10],
         [ObjectNode(0.124), 0.124],
         [ObjectNode("hello"), "hello"],
-        [IdNode("my_var"), "my_var"],
+        [ObjectNode("my_var"), "my_var"],
         [
-            VarNode(IdNode("variable.one")),
+            VarNode(ObjectNode("variable.one")),
             "$var(variable.one)",
         ],
         [
-            VarNode(IdNode("variable.one"), env=ObjectNode(True)),
+            VarNode(ObjectNode("variable.one"), env=ObjectNode(True)),
             "$var(variable.one, env=True)",
         ],
         [
-            VarNode(IdNode("variable.one"), default=ObjectNode(-24)),
+            VarNode(ObjectNode("variable.one"), default=ObjectNode(-24)),
             "$var(variable.one, default=-24)",
         ],
         [
             VarNode(
-                IdNode("variable.one"), default=ObjectNode(-24), env=ObjectNode(True)
+                ObjectNode("variable.one"),
+                default=ObjectNode(-24),
+                env=ObjectNode(True),
             ),
             "$var(variable.one, default=-24, env=True)",
         ],
         [ImportNode(ObjectNode("path/to/file.yaml")), '$import("path/to/file.yaml")'],
         [
-            SweepNode(ObjectNode("a"), IdNode("variable"), ObjectNode(10)),
-            '$sweep("a", variable, 10)',
+            SweepNode(ObjectNode("a"), ObjectNode("variable"), ObjectNode(10)),
+            "$sweep(a, variable, 10)",
         ],
         [StrBundleNode(ObjectNode("alice")), "alice"],
         [
             StrBundleNode(
                 ObjectNode("alice "),
-                VarNode(IdNode("foo"), default=ObjectNode("loves")),
+                VarNode(ObjectNode("foo"), default=ObjectNode("loves")),
                 ObjectNode(" bob"),
             ),
-            'alice $var(foo, default="loves") bob',
+            "alice $var(foo, default=loves) bob",
         ],
         [
             DictNode(
@@ -78,7 +79,7 @@ from deepdiff import DeepDiff
             DictNode(
                 {
                     StrBundleNode(
-                        VarNode(IdNode("var")), ObjectNode("foo")
+                        VarNode(ObjectNode("var")), ObjectNode("foo")
                     ): ObjectNode("bar")
                 }
             ),
@@ -138,14 +139,14 @@ from deepdiff import DeepDiff
         ],
         [
             ForNode(
-                IdNode("my.var"),
-                IdNode("x"),
+                ObjectNode("my.var"),
+                ObjectNode("x"),
                 DictNode(
                     {
                         ObjectNode("Hello"): ObjectNode("World"),
                         StrBundleNode(
-                            ObjectNode("Number_"), IndexNode(IdNode("x"))
-                        ): ItemNode(IdNode("x")),
+                            ObjectNode("Number_"), IndexNode(ObjectNode("x"))
+                        ): ItemNode(ObjectNode("x")),
                     }
                 ),
             ),

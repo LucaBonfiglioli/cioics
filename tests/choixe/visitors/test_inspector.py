@@ -41,7 +41,11 @@ class TestInspector:
                 ),
             ],
             [
-                "$sweep(10, x, variable.x)",
+                {
+                    "$directive": "sweep",
+                    "$args": [10, "$var(x)", "$var(variable.x)"],
+                    "$kwargs": {},
+                },
                 Inspection(variables={"x": None, "variable": {"x": None}}),
             ],
             [

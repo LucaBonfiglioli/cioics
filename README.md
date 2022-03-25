@@ -45,11 +45,17 @@ For simplicity, in the rest of this tutorial most examples will be written in YA
 
 ## Syntax
 
-As I may have anticipated, **Choixe** features are enabled when a **directive** is found. A **directive** must always start with a `$` and can have two forms: "compact" or "call".
+As I may have anticipated, **Choixe** features are enabled when a **directive** is found. **Directives** are special strings or special dictionaries that can appear in different forms:
+- "compact"
+- "call"
+- "extended"
+- "special"
+
+**Note**: some directives are available only in a subset of the previous forms.
 
 ### Compact Form
 
-```
+```yaml
 $DIRECTIVE_NAME
 ``` 
 
@@ -61,7 +67,7 @@ Examples:
 
 ### Call Form
 
-```
+```yaml
 $DIRECTIVE_NAME(ARGS, KWARGS)
 ```
 
@@ -78,9 +84,42 @@ The compact form is essentially a shortcut for the call form when no arguments a
 - ~~`$directive(arg1=(1, 2, 3))`~~
 - ~~`$directive(arg1="meow", arg2=$directive2(10, 20))`~~
 
+### Extended Form
+
+```yaml
+$directive: DIRECTIVE_NAME
+$args: LIST_OF_ARGS
+$kwargs: DICT_OF_KWARGS
+```
+
+The extended form is a more verbose and more explicit alternative that allows to pass complex arguments that cannot be expressed with the current limitations of the call form. 
+
+Examples:
+- ```yaml
+  $directive: var
+  $args:
+    - x
+  $kwargs:
+    default: hello
+    env: false
+  ```
+- ```yaml
+  $directive: sweep
+  $args:
+    - 10
+    - [10, 20]
+    - a: $var(x, default=30) # Directive nesting
+      b: 60
+  $kwargs: {}
+  ```
+
+### Special Form
+
+Some **directives** are available only with special forms, i.e. some forms that do not have a schema, and depend from the specific **directive** used. Do not worry, they are just a few, they are detailed below and their schema is easy to remember.
+
 ### String Bundles
 
-Directives can also be mixed with plain strings, creating a "String Bundle":
+**Directives** can also be mixed with plain strings, creating a "String Bundle":
 
 `$var(animal.name) is a $var(animal.species) and their owner is $var(animal.owner, default="unknown")`
 
@@ -93,11 +132,21 @@ In this case, the string is tokenized into 5 parts:
 
 The result of the computation is the string concatenation of the result of each individual token: `Oliver is a cat and their owner is Alice`.
 
-### Arguments
+  
 
-Directive **arguments** can be of two types:
-- **Literal**, raw data including explicitly defined numbers (`10`, `0.23`), boolean values (`True` or `False`) strings enclosed by either single quotes `' '` or double quotes `" "`.
-- **Id**, strings not surrounded by quotes. They have generally different semantics and usually represent abstract concepts like variable names. Ids can contain dots like `parent.child`.
+
+### Directive table
+
+| Directive | Compact | Call  | Extended | Special |
+| :-------: | :-----: | :---: | :------: | :-----: |
+|   `var`   |    ❌    |   ✔️   |    ✔️     |    ❌    |
+| `import`  |    ❌    |   ✔️   |    ✔️     |    ❌    |
+|  `sweep`  |    ❌    |   ✔️   |    ✔️     |    ❌    |
+|  `call`   |    ❌    |   ❌   |    ❌     |    ✔️    |
+|  `model`  |    ❌    |   ❌   |    ❌     |    ✔️    |
+|   `for`   |    ❌    |   ❌   |    ❌     |    ✔️    |
+|  `item`   |    ✔️    |   ✔️   |    ✔️     |    ❌    |
+|  `index`  |    ✔️    |   ✔️   |    ✔️     |    ❌    |
 
 ## Variables
 
@@ -139,12 +188,12 @@ API.
 
 To use variables, simply replace a literal value with a `var` directive: 
 
-`$var(identifier: Id, default: Literal = None, env: Literal[bool] = False)`
+`$var(identifier: str, default: Optional[Any] = None, env: bool = False)`
 
 Where:
 - `identifier` is the **pydash** path (dot notation only) where the value is looked up in the **context**.
-- `default` is a literal value to use when the context lookup fails - essentially making the variable entirely optional. Defaults to `None`.
-- `env` is a literal bool that, if set to `True`, will also look at the system environment variables in case the **context** lookup fails. Defaults to `False`.
+- `default` is a value to use when the context lookup fails - essentially making the variable entirely optional. Defaults to `None`.
+- `env` is a bool that, if set to `True`, will also look at the system environment variables in case the **context** lookup fails. Defaults to `False`.
 
 Here is what the deep learning toy configuration looks like after replacing some values with **variables**: 
 
@@ -159,7 +208,7 @@ model:
       - type: classification
         num_classes: $var(data.num_classes2) # No default: entirely task dependant
 training:
-  device: $var(TRAINING_DEVICE, default="cpu", env=True) # Choose device based on env vars.
+  device: $var(TRAINING_DEVICE, default=cpu, env=True) # Choose device based on env vars.
   epochs: $var(hparams.num_epochs, default=100)
   optimizer: 
     type: Adam

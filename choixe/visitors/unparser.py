@@ -1,9 +1,8 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from choixe.ast.nodes import (
     DictNode,
     ForNode,
-    IdNode,
     ImportNode,
     IndexNode,
     InstanceNode,
@@ -41,11 +40,8 @@ class Unparser(NodeVisitor):
     def visit_str_bundle(self, node: StrBundleNode) -> str:
         return "".join(x.accept(self) for x in node.nodes)
 
-    def visit_id(self, node: IdNode) -> str:
-        return node.name
-
     def visit_sweep(self, node: SweepNode) -> str:
-        return self._unparse_as_call("sweep", *node.cases)
+        return self._unparse_auto("sweep", *node.cases)
 
     def visit_var(self, node: VarNode) -> str:
         kwargs = {}
@@ -53,10 +49,10 @@ class Unparser(NodeVisitor):
             kwargs["default"] = node.default
         if node.env is not None:
             kwargs["env"] = node.env
-        return self._unparse_as_call("var", node.identifier, **kwargs)
+        return self._unparse_auto("var", node.identifier, **kwargs)
 
     def visit_import(self, node: ImportNode) -> str:
-        return self._unparse_as_call("import", node.path)
+        return self._unparse_auto("import", node.path)
 
     def visit_instance(self, node: InstanceNode) -> Dict[str, Any]:
         return {
@@ -71,23 +67,23 @@ class Unparser(NodeVisitor):
         }
 
     def visit_for(self, node: ForNode) -> Dict[str, Any]:
-        key = self._unparse_as_call("for", node.iterable, node.identifier)
+        key = self._unparse_call("for", node.iterable, node.identifier)
         value = node.body.accept(self)
         return {key: value}
 
     def visit_item(self, node: ItemNode) -> Any:
-        return self._unparse_as_call("item", node.identifier)
+        return self._unparse_auto("item", node.identifier)
 
     def visit_index(self, node: IndexNode) -> Any:
-        return self._unparse_as_call("index", node.identifier)
+        return self._unparse_auto("index", node.identifier)
 
     def _unparse_as_arg(self, node: Node) -> str:
         unparsed = node.accept(self)
-        if isinstance(node, ObjectNode):
-            if isinstance(unparsed, str):
-                return f'"{unparsed}"'
+        if isinstance(unparsed, str):
+            if all([x.isidentifier() for x in unparsed.split(".")]):
+                return unparsed
             else:
-                return str(unparsed)
+                return f'"{unparsed}"'
         else:
             return str(unparsed)
 
@@ -100,13 +96,35 @@ class Unparser(NodeVisitor):
     def _unparse_compact(self, name: str) -> str:
         return f"{DIRECTIVE_PREFIX}{name}"
 
-    def _unparse_as_call(self, name: str, *args: Node, **kwargs: Node) -> str:
+    def _unparse_call(self, name: str, *args: Node, **kwargs: Node) -> str:
         parts = []
         if len(args) > 0:
             parts.append(self._unparse_as_args(*args))
         if len(kwargs) > 0:
             parts.append(self._unparse_as_kwargs(**kwargs))
         return f"{self._unparse_compact(name)}({', '.join(parts)})"
+
+    def _unparse_extended(self, name: str, *args: Node, **kwargs: Node) -> Dict:
+        return {
+            "$directive": name,
+            "$args": [x.accept(self) for x in args],
+            "$kwargs": {k: v.accept(self) for k, v in kwargs.items()},
+        }
+
+    def _unparse_auto(self, name: str, *args: Node, **kwargs: Node) -> Union[Dict, str]:
+        if len(args) == 0 and len(kwargs) == 0:
+            return self._unparse_compact(name)
+
+        all_leafs = True
+        for x in list(args) + list(kwargs.values()):
+            if not isinstance(x, ObjectNode):
+                all_leafs = False
+                break
+
+        if all_leafs:
+            return self._unparse_call(name, *args, **kwargs)
+
+        return self._unparse_extended(name, *args, **kwargs)
 
 
 def unparse(node: Node) -> Any:

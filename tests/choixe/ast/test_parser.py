@@ -6,7 +6,6 @@ import pytest
 from choixe.ast.nodes import (
     DictNode,
     ForNode,
-    IdNode,
     ImportNode,
     IndexNode,
     InstanceNode,
@@ -114,13 +113,13 @@ class TestParse:
     def test_parse_for(self):
         expr = {"$for(iterable, x)": {"node_$index(x)": "Hello_$item(x)"}}
         expected = ForNode(
-            IdNode("iterable"),
-            IdNode("x"),
+            ObjectNode("iterable"),
+            ObjectNode("x"),
             DictNode(
                 {
                     StrBundleNode(
-                        ObjectNode("node_"), IndexNode(IdNode("x"))
-                    ): StrBundleNode(ObjectNode("Hello_"), ItemNode(IdNode("x")))
+                        ObjectNode("node_"), IndexNode(ObjectNode("x"))
+                    ): StrBundleNode(ObjectNode("Hello_"), ItemNode(ObjectNode("x")))
                 }
             ),
         )
@@ -144,7 +143,7 @@ class TestStringParse:
         default_str = f'"{default}"' if isinstance(default, str) else default
         expr = f"$var({id_}, default={default_str}, env={env})"
         assert parse(expr) == VarNode(
-            IdNode(id_), default=ObjectNode(default), env=ObjectNode(env)
+            ObjectNode(id_), default=ObjectNode(default), env=ObjectNode(env)
         )
 
     def test_import(self):
@@ -154,16 +153,16 @@ class TestStringParse:
 
     def test_sweep(self):
         expr = "$sweep(10, foo.bar, '30')"
-        expected = SweepNode(ObjectNode(10), IdNode("foo.bar"), ObjectNode("30"))
+        expected = SweepNode(ObjectNode(10), ObjectNode("foo.bar"), ObjectNode("30"))
         assert parse(expr) == expected
 
     def test_str_bundle(self):
         expr = "I am a string with $var(one.two.three) and $sweep(10, foo.bar, '30')"
         expected = StrBundleNode(
             ObjectNode("I am a string with "),
-            VarNode(IdNode("one.two.three")),
+            VarNode(ObjectNode("one.two.three")),
             ObjectNode(" and "),
-            SweepNode(ObjectNode(10), IdNode("foo.bar"), ObjectNode("30")),
+            SweepNode(ObjectNode(10), ObjectNode("foo.bar"), ObjectNode("30")),
         )
         assert parse(expr) == expected
 

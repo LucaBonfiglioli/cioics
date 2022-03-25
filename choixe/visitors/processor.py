@@ -9,7 +9,6 @@ import pydash as py_
 from choixe.ast.nodes import (
     DictNode,
     ForNode,
-    IdNode,
     ImportNode,
     IndexNode,
     InstanceNode,
@@ -99,18 +98,15 @@ class Processor(NodeVisitor):
                 data[i] += str(branches[i // N])
         return data
 
-    def visit_id(self, node: IdNode) -> List[Any]:
-        return [py_.get(self._context, node.name)]
-
     def visit_var(self, node: VarNode) -> List[Any]:
         default = None
         if node.default is not None:
             default = node.default.accept(self)[0]
 
         if node.env is not None and node.env.accept(self)[0]:
-            default = os.getenv(node.identifier.name, default=default)
+            default = os.getenv(node.identifier.data, default=default)
 
-        return [py_.get(self._context, node.identifier.name, default)]
+        return [py_.get(self._context, node.identifier.data, default)]
 
     def visit_import(self, node: ImportNode) -> List[Any]:
         path = Path(node.path.accept(self)[0])
@@ -147,8 +143,8 @@ class Processor(NodeVisitor):
         return [import_symbol(symbol, cwd=self._cwd).parse_obj(x) for x in branches]
 
     def visit_for(self, node: ForNode) -> List[Any]:
-        iterable = node.iterable.accept(self)[0]
-        id_ = node.identifier.name
+        iterable = py_.get(self._context, node.iterable.data)
+        id_ = node.identifier.data
 
         branches = []
         for i, x in enumerate(iterable):
@@ -171,11 +167,11 @@ class Processor(NodeVisitor):
         return branches
 
     def visit_index(self, node: IndexNode) -> List[Any]:
-        return [self._loop_data[node.identifier.name].index]
+        return [self._loop_data[node.identifier.data].index]
 
     def visit_item(self, node: ItemNode) -> List[Any]:
         sep = "."
-        loop_id, _, key = node.identifier.name.partition(sep)
+        loop_id, _, key = node.identifier.data.partition(sep)
         return [py_.get(self._loop_data[loop_id].item, f"{sep}{key}")]
 
 

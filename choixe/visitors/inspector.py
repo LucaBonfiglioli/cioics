@@ -10,7 +10,6 @@ import pydash as py_
 from choixe.ast.nodes import (
     DictNode,
     ForNode,
-    IdNode,
     ImportNode,
     IndexNode,
     InstanceNode,
@@ -69,17 +68,13 @@ class Inspector(NodeVisitor):
         start = Inspection(processed=True)
         return sum([x.accept(self) for x in node.nodes], start=start)
 
-    def visit_id(self, node: IdNode) -> Inspection:
-        variable = py_.set_({}, node.name, None)
-        return Inspection(variables=variable)
-
     def visit_var(self, node: VarNode) -> Inspection:
         default = None if node.default is None else node.default.data
-        variables = py_.set_({}, node.identifier.name, default)
+        variables = py_.set_({}, node.identifier.data, default)
 
         environ = {}
         if node.env is not None and node.env.data:
-            environ[node.identifier.name] = default
+            environ[node.identifier.data] = default
 
         return Inspection(variables=variables, environ=environ)
 
@@ -113,7 +108,9 @@ class Inspector(NodeVisitor):
         return self.visit_instance(node)
 
     def visit_for(self, node: ForNode) -> Inspection:
-        return node.iterable.accept(self) + node.body.accept(self)
+        iterable_insp = Inspection(variables=py_.set_({}, node.iterable.data, None))
+        body_insp = node.body.accept(self)
+        return iterable_insp + body_insp
 
     def visit_index(self, node: IndexNode) -> Inspection:
         return Inspection()
