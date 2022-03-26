@@ -2,8 +2,7 @@
 
 ## Introduction
 
-**Choixe** is a package that adds some cool features to markup configuration files,
-such as: 
+**Choixe** is a mini-language built on top of python that adds some cool features to markup configuration files, with the intent of increasing code reusability and automatizing some aspects of writing configuration files.
 
 - **Variables**: placeholders for something that will be defined later.
 - **Imports**: append the content of another configuration file anywhere.
@@ -62,8 +61,10 @@ $DIRECTIVE_NAME
 Basically a `$` followed by a name. The name must follow the rules of python identifiers, so only alphanumeric characters and underscores ( `_` ), the name cannot start with a digit.
 
 Examples:
--  `$model`
--  `$call`
+-  `$index`
+-  `$item`
+
+Only directives without parameters can be expressed in the compact form.
 
 ### Call Form
 
@@ -74,15 +75,17 @@ $DIRECTIVE_NAME(ARGS, KWARGS)
 The call form extends the compact form with a pair of parenthesis containing the directive arguments. Arguments follow the rules of a plain python function call, in fact, they are parsed using the python interpreter.
 
 Examples:
-- `$var(x, default="hello", env=False)`
+- `$var(x, default=hello, env=False)`
 - `$for(object.list, x)`
 
 The compact form is essentially a shortcut for the call form when no arguments are needed: `$model` is equivalent to `$model()`.
 
-**Note**: due to some limitations of the current lexer, directives can contain **at most** one set of parenthesis, meaning that you are **not** allowed to nest them like this:
+**Note**: due to some limitations of the current lexer, call forms can contain **at most** one set of parenthesis, meaning that you are **not** allowed to nest them like this:
 
 - ~~`$directive(arg1=(1, 2, 3))`~~
 - ~~`$directive(arg1="meow", arg2=$directive2(10, 20))`~~
+
+If you really need to nest **directives**, you must use the **extended form**, introduced in the next paragraph.
 
 ### Extended Form
 
@@ -131,9 +134,6 @@ In this case, the string is tokenized into 5 parts:
 5. `$var(animal.owner, default="unknown")`
 
 The result of the computation is the string concatenation of the result of each individual token: `Oliver is a cat and their owner is Alice`.
-
-  
-
 
 ### Directive table
 
@@ -241,6 +241,66 @@ TRAINING_DEVICE: cuda # Optional, env
 **Contexts** can also be seen as a "meta-configuration" providing an easier and cleaner access to a subset of "public" parameters of a templatized "private" configuration file with lots of details to keep hidden.
 
 ## Imports
+
+Imagine having a configuration file in which some parts could be reused in other configuration files. It's not the best idea to duplicate them, instead, you can move those parts in a separate configuration file and dynamically import it using the `import` **directive**.
+
+To use an import directive, replace any node of the configuration with the following directive:
+
+`$import(path: str)`
+
+Where:
+  - `path` can be an absolute or relative path to another configuration file. If the path is relative, it will be resolved relatively from the parent folder of the importing configuration file, or, in case there is no importing file, the system current working directive.
+
+Let's build on top of the previous "deep learning" example:
+
+```yaml
+model:
+  architecture:
+    backbone: resnet18
+    use_batch_norm: $var(hparams.normalize, default=True)
+    heads:
+      - type: classification
+        num_classes: $var(data.num_classes1)
+      - type: classification
+        num_classes: $var(data.num_classes2)
+training:
+  device: $var(TRAINING_DEVICE, default=cpu, env=True)
+  epochs: $var(hparams.num_epochs, default=100)
+  optimizer: 
+    type: Adam
+    params:
+      learning_rate: $var(hparams.lr, default=0.001)
+      betas: [0.9, 0.99]
+```
+
+Here, one could choose to factor out the `optimizer` node and move it into a separate file called "adam.yml".
+
+```yaml
+# neural_network.yml
+model:
+  architecture:
+    backbone: resnet18
+    use_batch_norm: $var(hparams.normalize, default=True)
+    heads:
+      - type: classification
+        num_classes: $var(data.num_classes1)
+      - type: classification
+        num_classes: $var(data.num_classes2)
+training:
+  device: $var(TRAINING_DEVICE, default=cpu, env=True)
+  epochs: $var(hparams.num_epochs, default=100)
+  optimizer: $import(adam.yml)
+```
+
+```yaml
+# adam.yml
+type: Adam
+params:
+  learning_rate: $var(hparams.lr, default=0.001)
+  betas: [0.9, 0.99]
+```
+
+Note that "adam.yml" contains some **directives**. This is not a problem and it is handled automatically by **Choixe**. There is also no restriction on using **imports** in imported files, you can nest them as you please.
 
 ## Sweeps
 

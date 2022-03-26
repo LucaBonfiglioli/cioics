@@ -197,8 +197,8 @@ class ForNode(Node):
     python id."""
 
     iterable: ObjectNode
-    identifier: ObjectNode
     body: Node
+    identifier: Optional[ObjectNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_for(self)
@@ -208,7 +208,7 @@ class ForNode(Node):
 class IndexNode(HashNode):
     """An `IndexNode` represents the index of the current iteration of a for loop."""
 
-    identifier: ObjectNode
+    identifier: Optional[ObjectNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_index(self)
@@ -218,7 +218,7 @@ class IndexNode(HashNode):
 class ItemNode(HashNode):
     """An `ItemNode` represents the item of the current iteration of a for loop."""
 
-    identifier: ObjectNode
+    identifier: Optional[ObjectNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_item(self)

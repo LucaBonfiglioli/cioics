@@ -175,7 +175,7 @@ class Parser:
     def _parse_for(self, data: dict) -> ForNode:
         pairs = self._key_value_pairs_by_token_name(data)
         loop, body = pairs["for"]
-        return ForNode(*loop.args, **loop.kwargs, body=self.parse(body))
+        return ForNode(loop.args[0], self.parse(body), *loop.args[1:], **loop.kwargs)
 
     def _parse_dict(self, data: dict) -> DictNode:
         for schema, fn in self._extended_and_special_forms.items():

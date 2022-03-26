@@ -140,7 +140,6 @@ from deepdiff import DeepDiff
         [
             ForNode(
                 ObjectNode("my.var"),
-                ObjectNode("x"),
                 DictNode(
                     {
                         ObjectNode("Hello"): ObjectNode("World"),
@@ -149,8 +148,21 @@ from deepdiff import DeepDiff
                         ): ItemNode(ObjectNode("x")),
                     }
                 ),
+                ObjectNode("x"),
             ),
             {"$for(my.var, x)": {"Hello": "World", "Number_$index(x)": "$item(x)"}},
+        ],
+        [
+            ForNode(
+                ObjectNode("my.var"),
+                DictNode(
+                    {
+                        ObjectNode("Hello"): ObjectNode("World"),
+                        StrBundleNode(ObjectNode("Number_"), IndexNode()): ItemNode(),
+                    }
+                ),
+            ),
+            {"$for(my.var)": {"Hello": "World", "Number_$index": "$item"}},
         ],
     ],
 )

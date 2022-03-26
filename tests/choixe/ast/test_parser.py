@@ -114,12 +114,26 @@ class TestParse:
         expr = {"$for(iterable, x)": {"node_$index(x)": "Hello_$item(x)"}}
         expected = ForNode(
             ObjectNode("iterable"),
-            ObjectNode("x"),
             DictNode(
                 {
                     StrBundleNode(
                         ObjectNode("node_"), IndexNode(ObjectNode("x"))
                     ): StrBundleNode(ObjectNode("Hello_"), ItemNode(ObjectNode("x")))
+                }
+            ),
+            ObjectNode("x"),
+        )
+        assert parse(expr) == expected
+
+    def test_parse_for_compact(self):
+        expr = {"$for(iterable)": {"node_$index": "Hello_$item"}}
+        expected = ForNode(
+            ObjectNode("iterable"),
+            DictNode(
+                {
+                    StrBundleNode(ObjectNode("node_"), IndexNode()): StrBundleNode(
+                        ObjectNode("Hello_"), ItemNode()
+                    )
                 }
             ),
         )

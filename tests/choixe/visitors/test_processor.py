@@ -284,6 +284,16 @@ class TestProcessor:
         ]
         self._expectation_test(data, expected)
 
+    def test_for_dict_compact(self):
+        data = {"$for(collection1)": {"Index=$index": "Item=$item"}}
+        expected = [
+            {
+                f"Index={i}": f"Item={x}"
+                for i, x in enumerate(self.context["collection1"])
+            }
+        ]
+        self._expectation_test(data, expected)
+
     def test_for_nested(self):
         data = {
             "$for(collection3, x)": {
@@ -296,6 +306,20 @@ class TestProcessor:
             {
                 "item_0=50": ["item_0_0=100", "item_0_1=101"],
                 "item_1=51": ["item_1_0=100", "item_1_1=101"],
+            }
+        ]
+        self._expectation_test(data, expected)
+
+    def test_for_nested_compact(self):
+        data = {
+            "$for(collection3)": {
+                "item_$index = $item": {"$for(collection4)": ["item_$index = $item"]}
+            }
+        }
+        expected = [
+            {
+                "item_0 = 50": ["item_0 = 100", "item_1 = 101"],
+                "item_1 = 51": ["item_0 = 100", "item_1 = 101"],
             }
         ]
         self._expectation_test(data, expected)
@@ -314,7 +338,7 @@ class TestProcessor:
         data = {
             "$for(collection3, x)": [
                 "$sweep(1, 2)$item(x)",
-                {"$for(collection4, y)": ["$sweep(3, 4)$index(x)$item(y)"]},
+                {"$for(collection4)": ["$sweep(3, 4)$index(x)$item"]},
             ]
         }
         expected = [

@@ -67,15 +67,24 @@ class Unparser(NodeVisitor):
         }
 
     def visit_for(self, node: ForNode) -> Dict[str, Any]:
-        key = self._unparse_call("for", node.iterable, node.identifier)
+        args = []
+        if node.identifier is not None:
+            args.append(node.identifier)
+        key = self._unparse_call("for", node.iterable, *args)
         value = node.body.accept(self)
         return {key: value}
 
     def visit_item(self, node: ItemNode) -> Any:
-        return self._unparse_auto("item", node.identifier)
+        args = []
+        if node.identifier is not None:
+            args.append(node.identifier)
+        return self._unparse_auto("item", *args)
 
     def visit_index(self, node: IndexNode) -> Any:
-        return self._unparse_auto("index", node.identifier)
+        args = []
+        if node.identifier is not None:
+            args.append(node.identifier)
+        return self._unparse_auto("index", *args)
 
     def _unparse_as_arg(self, node: Node) -> str:
         unparsed = node.accept(self)

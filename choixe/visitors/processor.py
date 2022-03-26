@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import uuid
 
 import pydash as py_
 from choixe.ast.nodes import (
@@ -60,6 +61,7 @@ class Processor(NodeVisitor):
         self._allow_branching = allow_branching
 
         self._loop_data: Dict[str, LoopInfo] = {}
+        self._current_loop: Optional[str] = None
 
     def visit_dict(self, node: DictNode) -> List[Dict]:
         data = [{}]
@@ -144,15 +146,18 @@ class Processor(NodeVisitor):
 
     def visit_for(self, node: ForNode) -> List[Any]:
         iterable = py_.get(self._context, node.iterable.data)
-        id_ = node.identifier.data
+        id_ = str(uuid.uuid1()) if node.identifier is None else node.identifier.data
+        prev_loop = self._current_loop
+        self._current_loop = id_
 
         branches = []
         for i, x in enumerate(iterable):
-            self._loop_data[id_] = LoopInfo(i, x)
+            self._loop_data[self._current_loop] = LoopInfo(i, x)
             branches.append(node.body.accept(self))
 
-        branches = list(product(*branches))
+        self._current_loop = prev_loop
 
+        branches = list(product(*branches))
         for i, branch in enumerate(branches):
             if isinstance(node.body, DictNode):
                 res = {}
@@ -167,11 +172,13 @@ class Processor(NodeVisitor):
         return branches
 
     def visit_index(self, node: IndexNode) -> List[Any]:
-        return [self._loop_data[node.identifier.data].index]
+        id_ = self._current_loop if node.identifier is None else node.identifier.data
+        return [self._loop_data[id_].index]
 
     def visit_item(self, node: ItemNode) -> List[Any]:
+        key = self._current_loop if node.identifier is None else node.identifier.data
         sep = "."
-        loop_id, _, key = node.identifier.data.partition(sep)
+        loop_id, _, key = key.partition(sep)
         return [py_.get(self._loop_data[loop_id].item, f"{sep}{key}")]
 
 
