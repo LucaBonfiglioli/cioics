@@ -191,7 +191,7 @@ To use variables, simply replace a literal value with a `var` directive:
 `$var(identifier: str, default: Optional[Any] = None, env: bool = False)`
 
 Where:
-- `identifier` is the **pydash** path (dot notation only) where the value is looked up in the **context**.
+- `identifier` is the [pydash](https://pydash.readthedocs.io/en/latest/) path (dot notation only) where the value is looked up in the **context**.
 - `default` is a value to use when the context lookup fails - essentially making the variable entirely optional. Defaults to `None`.
 - `env` is a bool that, if set to `True`, will also look at the system environment variables in case the **context** lookup fails. Defaults to `False`.
 
@@ -475,16 +475,206 @@ In this case, there is the constraint that the imported class must be a `BaseMod
 
 ## Loops
 
+You want to repeat a configuration node, iterating over a list of values? You can do this with the `for` **directive**, available only with the following **special form**:
 
+```yaml
+$for(ITERABLE[, ID]): BODY
+```
+
+Where:
+- `ITERABLE` is a context key (just like a `var`) that points to a list. The for loop will iterate over the items of this list.
+- `ID` is an optional identifier for this for-loop, used to distinguish this specific loop from all the others, in case multiple loops are nested. Think of it like the `x` in `for x in my_list:`. When not specified, **Choixe** will use a random uuid behind the scenes.
+- `BODY` can be either:
+  - A **dictionary** - the for loop will perform dictionary union over all the iterations.
+  - A **list** - the for loop will perform list concatenation over all the iterations.
+  - A **string** - the for loop will perform string concatenation over all the iterations.
+
+For-loops alone are not that powerful, but they are meant to be used along two other **directives**:
+
+- `$index(identifier: Optional[str] = None)` or `$index` 
+- `$item(identifier: Optional[str] = None)` or `$item`
+
+They, respectively, return the integer index and the item of the current loop iteration. If no identifier is specified (you can use the **compact form**), they will refer to the first for loop encountered in the stack. Otherwise, they will refer to the loop whose identifier matches the one specified. 
+
+Optionally, the `item` **directive** can contain a [pydash](https://pydash.readthedocs.io/en/latest/) key starting with the loop id, to refer to a specific item inside the structure.
+
+Example:
+```yaml
+alice:
+    # For loop that merges the resulting dictionaries
+    "$for(params.cats, x)":
+        cat_$index(x):
+            index: I am cat number $index
+            name: My name is $item(x.name)
+            age: My age is $item(x.age)
+bob:
+    # For loop that extends the resulting list
+    "$for(params.cats, x)":
+        - I am cat number $index
+        - My name is $item(x.name)
+charlie:
+    # For loop that concatenates the resulting strings
+    "$for(params.cats, x)": "Cat_$index(x)=$item(x.age) "
+``` 
+Given the context:
+```yaml
+params:
+  cats:
+    - name: Luna
+      age: 5
+    - name: Milo 
+      age: 6
+    - name: Oliver
+      age: 14
+```
+Will result in:
+```yaml
+alice:
+  cat_0:
+    age: My age is 5
+    index: I am cat number 0
+    name: My name is Luna
+  cat_1:
+    age: My age is 6
+    index: I am cat number 1
+    name: My name is Milo
+  cat_2:
+    age: My age is 14
+    index: I am cat number 2
+    name: My name is Oliver
+bob:
+  - I am cat number 0
+  - My name is Luna
+  - I am cat number 1
+  - My name is Milo
+  - I am cat number 2
+  - My name is Oliver
+charlie: "Cat_0=5 Cat_1=6 Cat_2=14 "
+```
 
 ## XConfig
 
+All **Choixe** functionalities can be accessed with the `XConfig` class. You can construct an `XConfig` from any python mapping, by simply passing it to the constructor:
+
+```python
+from choixe import XConfig
+
+# A dictionary containing stuff
+data = {
+    "alpha": {
+        "a": 10,
+        "b": -2,
+    },
+    "beta": {
+        "a": "hello",
+        "b": "world",
+    },
+} 
+
+# Instance an XConfig
+cfg = XConfig(data)
+```
+
 ### Interaction
+
+An `XConfig` is also a python `Mapping` and has all the methods you would expect from a plain python `dict`. 
+
+In addition, you can get/set its contents with the dot notation (if you know the keys at code time) like:
+
+```python
+cfg.alpha.b
+# -2
+
+cfg.alpha.new_key = 42
+cfg.alpha
+# {"a": 10, "b": -2, "new_key": 42}
+```
+
+You can also use `deep_get` and `deep_set` to get/set deep content using [pydash](https://pydash.readthedocs.io/en/latest/) keys, useful if you don't know the keys at code time. The `deep_set` method also have a flag that disables the setting of the new value if this involves creating a new key.
+
+```python
+cfg.deep_get("alpha.b")
+# -2
+
+cfg.deep_set("alpha.new_key", 42)
+cfg.deep_get("alpha")
+# {"a": 10, "b": -2, "new_key": 42}
+
+# This should be a NoOp, since "another_new_key" was not already present.
+cfg.deep_set("alpha.another_new_key", 43, only_valid_keys=True)
+cfg.deep_get("alpha")
+# {"a": 10, "b": -2, "new_key": 42}
+```
+
+There is also a `deep_update` method to merge two configurations into one. The `full_merge` flag enables the setting on new keys.
+
+```python
+data = XConfig({
+    "a": {"b": 100},
+    "b": {"a": 1, "b": [{"a": -1, "b": -2}, "a"]},
+})
+other = XConfig({"b": {"b": [{"a": 42}], "c": {"a": 18, "b": 20}}})
+data.deep_update(other)
+# {
+#     "a": {"b": 100},
+#     "b": {"a": 1, "b": [{"a": 42, "b": -2}, "a"]},
+# }
+
+data.deep_update(other, full_merge=True)
+# {
+#     "a": {"b": 100},
+#     "b": {"a": 1, "b": [{"a": 42, "b": -2}, "a"], "c": {"a": 18, "b": 20}}
+# }
+```
+
+At any moment, you can convert the XConfig back to a dictionary by calling `to_dict`.
+
+```python
+plain_dict = cfg.to_dict()
+type(plain_dict)
+# dict
+```
 
 ### I/O
 
-### Processing
+`XConfig` provides a simplified interface to load/save from/to a file. The format is automatically inferred from the file extension.
 
-### Flattening
+```python
+cfg = XConfig.from_file("path/to/my_cfg.yml")
+cfg.save_to("another/path/to/my_cfg.json")
+```
+
+
+### Processing
+At the moment of creation, the `XConfig` content will be an exact copy of the plain python dictionary used to create it, no check or operation is performed on the directives, they are treated just like any other string.
+
+To "activate" them, you need to **process** the `XConfig`, by calling either `process` or `process_all`, passing an appropriate **context** dictionary.
+
+`process` will compile and run the configuration **without branching** (i.e. sweeps nodes are disabled), and return the processed `XConfig`.
+
+`process_all` will compile and run the configuration **with branching** and return a list of all the processed `XConfig`.
+
+```python
+cfg = XConfig.from_file("config.yml")
+
+output = cfg.process()
+outputs = cfg.process_all()
+```
 
 ### Inspection
+What if you just loaded an XConfig and are about to process it, only, you don't know what to pass as **context**, what environment variables are required, or what files are going to be imported. You can use the `inspect` method, to get some info on the `XConfig` that you are about to process.
+
+The result of `inspect` is an `Inspection`, containing the following fields:
+- `imports` - A `set` of all the absolute paths imported from the inspected `XConfig`.
+- `variables` - An uninitialized structure that can be used as context, containing all variables and loop iterables, and their default value if present (`None` otherwise).
+- `environ` - An uninitialized structure containing all environment variables and their default value if present (`None` otherwise).
+- `symbols` - The `set` of all dynamically imported python files/modules.
+- `processed` - A `bool` value that is true if the `XConfig` contains any **Choixe directive** and thus needs processing.
+
+### Validation
+
+At the moment of creation - whether from file or from a plain dictionary, you can specify an optional `Schema` object used for validation. More details [here](https://github.com/keleshev/schema). 
+
+Validation is enabled only when a schema is set.
+
+To validate an `XConfig` you can use `is_valid` to know if the configuration validates its schema. You can also use `validate` to perform full validation (enabling side effects).

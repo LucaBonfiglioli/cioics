@@ -61,7 +61,8 @@ class XConfig(Box):
         Returns:
             XConfig: The loaded `XConfig`
         """
-        return XConfig(data=load(Path(path)), cwd=path.parent, schema=schema)
+        path = Path(path)
+        return XConfig(data=load(path), cwd=path.parent, schema=schema)
 
     def get_schema(self) -> Optional[Schema]:
         """Getter for the configuration schema"""
