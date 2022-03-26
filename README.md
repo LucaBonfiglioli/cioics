@@ -304,9 +304,178 @@ Note that "adam.yml" contains some **directives**. This is not a problem and it 
 
 ## Sweeps
 
+**Sweeps** allow to perform an exhaustive search over a parametrization space, in a grid-like fashion, without having to manually duplicate the configuration file.
+
+To use a `sweep` **directive**, replace any node of the configuration with the following **directive**:
+
+`$sweep(*args: Any)`
+
+Where:
+- `args` is an arbitrary set of parameters.
+  
+All the **directives** introduced so far are "non-branching", i.e. they only have one possible outcome. **Sweeps** instead, are currently the only "branching" **Choixe directives**, as they produce multiple configurations as their output.
+
+Example:
+
+```yaml
+foo:
+  alpha: $sweep(a, b) # Sweep 1
+  beta: $sweep(10, 20, hello) # Sweep 2
+```
+
+Will produce the following **six** outputs, the cartesian product of `{a, b}` and `{10, 20, hello}`:
+
+1. ```yaml
+   foo:
+     alpha: a
+     beta: 10
+   ```
+2. ```yaml
+   foo:
+     alpha: b
+     beta: 10
+   ```
+1. ```yaml
+   foo:
+     alpha: a
+     beta: 20
+   ```
+2. ```yaml
+   foo:
+     alpha: b
+     beta: 20
+   ```
+3. ```yaml
+   foo:
+     alpha: a
+     beta: hello
+   ```
+4. ```yaml
+   foo:
+     alpha: b
+     beta: hello
+   ```
+
+```mermaid
+flowchart TD
+root -->|Sweep 1| a
+root -->|Sweep 1| b
+a -->|Sweep 2| id1[10]
+a -->|Sweep 2| id2[20]
+a -->|Sweep 2| id3[hello]
+b -->|Sweep 2| id4[10]
+b -->|Sweep 2| id5[20]
+b -->|Sweep 2| id6[hello]
+```
+
+By default, all **sweeps** are global, each of them adds a new axis to the parameter space, regardless of the depth at which they appear in the structure. There is only one exception to this rule: if a **sweep** appears inside a branch of another sweep; in this case, the new axis is added locally.
+
+Example:
+
+```yaml
+foo: 
+  $directive: sweep # Sweep 1 (global)
+  $args:
+    - alpha: $sweep(foo, bar) # Sweep 2 (local)
+      beta: 10
+    - gamma: hello 
+  $kwargs: {}
+```
+
+Will produce the following **three** outputs:
+
+1. ```yaml
+   foo:
+     alpha: foo
+     beta: 10
+   ```
+2. ```yaml
+   foo:
+     alpha: bar
+     beta: 10
+   ```
+3. ```yaml
+   foo:
+     gamma: hello
+   ```
+
+```mermaid
+flowchart TD
+root -->|Sweep 1| a["{alpha: $sweep(foo, bar), beta: 10}"]
+root -->|Sweep 1| b["gamma: hello"]
+a -->|Sweep 2| foo
+a -->|Sweep 2| bar
+```
+
 ## Instances
+**Instances** allow to dynamically replace configuration nodes with real **python objects**. This can happen in two ways:
+- With the `call` **directive** - dynamically import a python function, invoke it and replace the node content with the function result.
+- With the `model` **directive** - dynamically import a [pydantic](https://pydantic-docs.helpmanual.io/) `BaseModel` and use it to deserialize the content of the current node.
+
+**Note**: these **directives** can only be used with the **special form**.
+
+### Call 
+
+To invoke a python `Callable`, use the following directive.
+
+```yaml
+$call: SYMBOL [str]
+$args: ARGUMENTS [dict]
+```
+
+Where:
+- `SYMBOL` is a string containing either:
+  - A filesystem path to a .py file, followed by `:` and the name of a callable.
+  - A python module path followed by `.` and the name of a callable.
+- `ARGUMENTS` is a dictionary containing the arguments to pass to the callable.
+
+Example:
+
+```yaml
+foo: 
+  $call: path/to/my_file.py:MyClass
+  $args:
+    a: 10
+    b: 20
+```
+
+Will import `MyClass` from `path/to/my_file.py` and produce the dictionary:
+
+```python
+{"foo": SomeClass(a=10, b=20)}
+```
+
+Another example:
+
+```yaml
+foo:
+  $call: numpy.zeros
+  $args:
+    shape: [2, 3]
+```
+
+Will import `numpy.zeros` and produce the dictionary:
+
+```python
+{"foo": numpy.zeros(shape=[2, 3])}
+```
+
+### Model
+
+Similar to `call`, the `model` **directive** will provide an easier interface to deserialize **pydantic** models. 
+
+The syntax is essentially the same as `call`:
+
+```yaml
+$model: SYMBOL [str]
+$args: ARGUMENTS [dict]
+```
+
+In this case, there is the constraint that the imported class must be a `BaseModel` subtype.
 
 ## Loops
+
+
 
 ## XConfig
 

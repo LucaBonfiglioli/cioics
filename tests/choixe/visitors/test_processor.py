@@ -198,6 +198,22 @@ class TestProcessor:
         ]
         self._expectation_test(data, expected)
 
+    def test_sweep_nested(self):
+        data = {
+            "foo": {
+                "$directive": "sweep",
+                "$args": [{"$sweep(foo, bar)": "10"}, {"foo": "$sweep(20, 30)"}],
+                "$kwargs": {},
+            }
+        }
+        expected = [
+            {"foo": {"foo": "10"}},
+            {"foo": {"bar": "10"}},
+            {"foo": {"foo": 20}},
+            {"foo": {"foo": 30}},
+        ]
+        self._expectation_test(data, expected)
+
     def test_instance(self):
         data = {
             "$call": f"{__file__}:MyCompositeClass",
