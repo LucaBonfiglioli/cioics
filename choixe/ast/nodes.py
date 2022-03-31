@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 class NodeVisitor:  # pragma: no cover
@@ -55,6 +55,15 @@ class NodeVisitor:  # pragma: no cover
         return node
 
     def visit_item(self, node: ItemNode) -> Any:
+        return node
+
+    def visit_uuid(self, node: UuidNode) -> Any:
+        return node
+
+    def visit_date(self, node: DateNode) -> Any:
+        return node
+
+    def visit_cmd(self, node: CmdNode) -> Any:
         return node
 
 
@@ -222,3 +231,25 @@ class ItemNode(HashNode):
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_item(self)
+
+
+@dataclass(eq=False)
+class UuidNode(HashNode):
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_uuid(self)
+
+
+@dataclass(eq=False)
+class DateNode(HashNode):
+    format: Optional[ObjectNode] = None
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_date(self)
+
+
+@dataclass(eq=False)
+class CmdNode(HashNode):
+    command: ObjectNode
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_cmd(self)

@@ -1,13 +1,16 @@
 import os
+import uuid
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime
 from itertools import product
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import uuid
 
 import pydash as py_
 from choixe.ast.nodes import (
+    CmdNode,
+    DateNode,
     DictNode,
     ForNode,
     ImportNode,
@@ -21,6 +24,7 @@ from choixe.ast.nodes import (
     ObjectNode,
     StrBundleNode,
     SweepNode,
+    UuidNode,
     VarNode,
 )
 from choixe.ast.parser import parse
@@ -180,6 +184,21 @@ class Processor(NodeVisitor):
         sep = "."
         loop_id, _, key = key.partition(sep)
         return [py_.get(self._loop_data[loop_id].item, f"{sep}{key}")]
+
+    def visit_uuid(self, node: UuidNode) -> List[str]:
+        return [str(uuid.uuid1())]
+
+    def visit_date(self, node: DateNode) -> Any:
+        format_ = node.format
+        ts = datetime.now()
+        if format_ is None:
+            return [ts.isoformat()]
+        else:
+            return [ts.strftime(format_.data)]
+
+    def visit_cmd(self, node: CmdNode) -> Any:
+        # TODO
+        pass
 
 
 def process(

@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Union
 
 from choixe.ast.nodes import (
+    CmdNode,
+    DateNode,
     DictNode,
     ForNode,
     ImportNode,
@@ -14,6 +16,7 @@ from choixe.ast.nodes import (
     ObjectNode,
     StrBundleNode,
     SweepNode,
+    UuidNode,
     VarNode,
 )
 from choixe.ast.parser import DIRECTIVE_PREFIX
@@ -85,6 +88,18 @@ class Unparser(NodeVisitor):
         if node.identifier is not None:
             args.append(node.identifier)
         return self._unparse_auto("index", *args)
+
+    def visit_uuid(self, node: UuidNode) -> Any:
+        return self._unparse_compact("uuid")
+
+    def visit_date(self, node: DateNode) -> Any:
+        args = []
+        if node.format is not None:
+            args.append(node.format)
+        return self._unparse_auto("date", *args)
+
+    def visit_cmd(self, node: CmdNode) -> Any:
+        return self._unparse_auto("cmd", node.command)
 
     def _unparse_as_arg(self, node: Node) -> str:
         unparsed = node.accept(self)

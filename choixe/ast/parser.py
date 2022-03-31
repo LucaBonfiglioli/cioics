@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple, Union
 
 from choixe.ast.nodes import (
+    CmdNode,
+    DateNode,
     DictNode,
     ForNode,
     ImportNode,
@@ -16,6 +18,7 @@ from choixe.ast.nodes import (
     ObjectNode,
     StrBundleNode,
     SweepNode,
+    UuidNode,
     VarNode,
 )
 from schema import Schema
@@ -121,6 +124,9 @@ class Parser:
             "str": ObjectNode,
             "index": IndexNode,
             "item": ItemNode,
+            "uuid": UuidNode,
+            "date": DateNode,
+            "cmd": CmdNode,
         }
 
         self._extended_and_special_forms = {
