@@ -69,7 +69,11 @@ class Scanner:
             py_args = []
             py_kwargs = {}
         else:
-            raise SyntaxError(code)
+            raise SyntaxError(
+                f'Error when parsing code "${code}", expected either a '
+                "compact form like $DIRECTIVE, or a call form like "
+                "$DIRECTIVE(ARGS, KWARGS)"
+            )
 
         args = []
         for py_arg in py_args:
@@ -197,7 +201,10 @@ class Parser:
         nodes = []
         for token in self._scanner.scan(data):
             if token.name not in self._call_forms:
-                raise NotImplementedError(token.name)
+                raise NotImplementedError(
+                    f'Error when parsing "{data}": the directive "{token.name}" is '
+                    "not recognized by Choixe."
+                )
             node = self._call_forms[token.name](*token.args, **token.kwargs)
             nodes.append(node)
 

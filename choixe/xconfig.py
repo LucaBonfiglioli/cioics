@@ -42,7 +42,9 @@ class XConfig(Box):
         self._schema = None
 
         data = data if data is not None else {}
-        assert isinstance(data, Mapping), f"Unsupported type {data.__class__}"
+        assert isinstance(
+            data, Mapping
+        ), f'XConfig can only contain mappings, found "{data.__class__.__name__}"'
 
         self.update(data)
         self.set_schema(schema)
