@@ -188,7 +188,7 @@ class Processor(NodeVisitor):
     def visit_uuid(self, node: UuidNode) -> List[str]:
         return [str(uuid.uuid1())]
 
-    def visit_date(self, node: DateNode) -> Any:
+    def visit_date(self, node: DateNode) -> List[str]:
         format_ = node.format
         ts = datetime.now()
         if format_ is None:
@@ -196,9 +196,9 @@ class Processor(NodeVisitor):
         else:
             return [ts.strftime(format_.data)]
 
-    def visit_cmd(self, node: CmdNode) -> Any:
-        # TODO
-        pass
+    def visit_cmd(self, node: CmdNode) -> List[str]:
+        subp = os.popen(node.command.data)
+        return [subp.read()]
 
 
 def process(

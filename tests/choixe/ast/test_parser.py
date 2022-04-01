@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from choixe.ast.nodes import (
+    DateNode,
     DictNode,
     ForNode,
     ImportNode,
@@ -15,6 +16,7 @@ from choixe.ast.nodes import (
     ObjectNode,
     StrBundleNode,
     SweepNode,
+    UuidNode,
     VarNode,
 )
 from choixe.ast.parser import parse
@@ -179,6 +181,19 @@ class TestStringParse:
             SweepNode(ObjectNode(10), ObjectNode("foo.bar"), ObjectNode("30")),
         )
         assert parse(expr) == expected
+
+    def test_uuid(self):
+        expr = "$uuid"
+        expected = UuidNode()
+        assert parse(expr) == expected
+
+    @pytest.mark.parametrize(["format_"], [[None], ["%Y-%m-%d"], ["%h:%M:%s"]])
+    def test_date(self, format_):
+        expr = "$date"
+        if format_ is not None:
+            expr += f'("{format_}")'
+        format_ = ObjectNode(format_) if format_ is not None else None
+        assert parse(expr) == DateNode(format_)
 
 
 class TestParserRaise:

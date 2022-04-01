@@ -2,6 +2,8 @@ from typing import Any
 
 import pytest
 from choixe.ast.nodes import (
+    CmdNode,
+    DateNode,
     DictNode,
     ForNode,
     ImportNode,
@@ -14,6 +16,7 @@ from choixe.ast.nodes import (
     ObjectNode,
     StrBundleNode,
     SweepNode,
+    UuidNode,
     VarNode,
 )
 from choixe.visitors import unparse
@@ -164,6 +167,10 @@ from deepdiff import DeepDiff
             ),
             {"$for(my.var)": {"Hello": "World", "Number_$index": "$item"}},
         ],
+        [UuidNode(), "$uuid"],
+        [DateNode(), "$date"],
+        [DateNode(ObjectNode("%Y%m%d")), '$date("%Y%m%d")'],
+        [CmdNode(ObjectNode("ls -lha")), '$cmd("ls -lha")'],
     ],
 )
 def test_unparse(node: Node, expected: Any):

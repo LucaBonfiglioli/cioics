@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path, PurePosixPath
+import sys
 from typing import Tuple
+
+import pytest
 
 from choixe.ast.parser import parse
 from choixe.utils.io import load
@@ -349,6 +352,28 @@ class TestProcessor:
             {0: "50=b", 1: "51=b"},
         ]
         self._expectation_test(data, expected)
+
+    def test_uuid(self):
+        data = "$uuid"
+        processed = process(parse(data))
+        assert len(processed) == 1 and isinstance(processed[0], str)
+
+    def test_date(self):
+        data = "$date"
+        processed = process(parse(data))
+        assert len(processed) == 1 and isinstance(processed[0], str)
+
+    def test_date_format(self):
+        data = "$date('%Y')"
+        processed = process(parse(data))
+        assert len(processed) == 1 and isinstance(processed[0], str)
+
+    def test_cmd(self):
+        if os.name != "posix":
+            pytest.skip()
+        data = "$cmd('ls -lha')"
+        processed = process(parse(data))
+        assert len(processed) == 1 and isinstance(processed[0], str)
 
     def test_for_mindfuck(self):
         data = {

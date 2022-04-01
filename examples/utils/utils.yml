@@ -1,0 +1,3 @@
+a: $uuid
+b: $date
+c: $cmd("ls -lha | grep choixe")
