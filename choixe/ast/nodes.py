@@ -235,12 +235,16 @@ class ItemNode(HashNode):
 
 @dataclass(eq=False)
 class UuidNode(HashNode):
+    """An `UuidNode` represents a randomly generated uuid."""
+
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_uuid(self)
 
 
 @dataclass(eq=False)
 class DateNode(HashNode):
+    """A `DateNode` represents the current datetime with an optional custom format."""
+
     format: Optional[ObjectNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
@@ -249,6 +253,8 @@ class DateNode(HashNode):
 
 @dataclass(eq=False)
 class CmdNode(HashNode):
+    """A `CmdNode` represents the calling of a system command."""
+
     command: ObjectNode
 
     def accept(self, visitor: NodeVisitor) -> Any:
