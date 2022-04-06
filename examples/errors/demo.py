@@ -10,6 +10,7 @@ files = [
     "not_yaml.yml",
     "not_dict.yml",
     "wrong_syntax_inline.yml",
+    "wrong_arguments.yml",
 ]
 for file in files:
     try:
@@ -19,3 +20,4 @@ for file in files:
     except Exception as e:
         rich.print(f"File:", path)
         print_exc()
+        [rich.print() for _ in range(10)]

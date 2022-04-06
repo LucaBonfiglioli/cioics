@@ -19,7 +19,7 @@ from choixe.ast.nodes import (
     UuidNode,
     VarNode,
 )
-from choixe.ast.parser import parse
+from choixe.ast.parser import ChoixeParsingError, ChoixeSyntaxError, parse
 
 
 class TestParse:
@@ -199,12 +199,12 @@ class TestStringParse:
 class TestParserRaise:
     def test_unknown_directive(self):
         expr = "$unknown_directive(lots, of, params=10)"
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(ChoixeParsingError):
             parse(expr)
 
     def test_arg_too_complex(self):
         expr = "$sweep(lots, of, [arguments, '10'])"
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(ChoixeParsingError):
             parse(expr)
 
     @pytest.mark.parametrize(
@@ -217,5 +217,5 @@ class TestParserRaise:
         ],
     )
     def test_syntax_error(self, expr: str):
-        with pytest.raises(SyntaxError):
+        with pytest.raises(ChoixeParsingError):
             parse(expr)

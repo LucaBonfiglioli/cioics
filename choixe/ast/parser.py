@@ -1,7 +1,7 @@
 import ast
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Type, Union
 
 from choixe.ast.nodes import (
     CmdNode,
@@ -27,11 +27,27 @@ DIRECTIVE_PREFIX = "$"
 """Prefix used at the start of all Choixe directives."""
 
 
+class ChoixeParsingError(Exception):
+    pass
+
+
+class ChoixeSyntaxError(ChoixeParsingError):
+    pass
+
+
+class ChoixeTokenValidationError(ChoixeParsingError):
+    pass
+
+
+class ChoixeStructValidationError(ChoixeParsingError):
+    pass
+
+
 @dataclass
 class Token:
     name: str
-    args: List[Node]
-    kwargs: Dict[str, Node]
+    args: List[Any]
+    kwargs: Dict[str, Any]
 
 
 class Scanner:
@@ -44,19 +60,23 @@ class Scanner:
 
     def _scan_argument(
         self, py_arg: Union[ast.Constant, ast.Attribute, ast.Name]
-    ) -> Node:
+    ) -> Any:
         if isinstance(py_arg, ast.Constant):
-            return ObjectNode(py_arg.value)
+            return py_arg.value
         elif isinstance(py_arg, ast.Attribute):
             name = ast.unparse(py_arg)
-            return ObjectNode(name)
+            return str(name)
         elif isinstance(py_arg, ast.Name):
-            return ObjectNode(py_arg.id)
+            return str(py_arg.id)
         else:
-            raise NotImplementedError(py_arg.__class__)
+            raise ChoixeSyntaxError(py_arg.__class__)
 
     def _scan_directive(self, code: str) -> Token:
-        py_ast = ast.parse(f"_{code}")  # Add "_" to avoid conflicts with python
+        try:
+            py_ast = ast.parse(f"_{code}")  # Add "_" to avoid conflicts with python
+        except SyntaxError as e:
+            raise ChoixeSyntaxError(code)
+
         assert isinstance(py_ast, ast.Module)
         py_expr = py_ast.body[0].value
 
@@ -69,11 +89,7 @@ class Scanner:
             py_args = []
             py_kwargs = {}
         else:
-            raise SyntaxError(
-                f'Error when parsing code "${code}", expected either a '
-                "compact form like $DIRECTIVE, or a call form like "
-                "$DIRECTIVE(ARGS, KWARGS)"
-            )
+            raise ChoixeSyntaxError(code)
 
         args = []
         for py_arg in py_args:
@@ -122,21 +138,20 @@ class Parser:
         }
 
         self._call_forms = {
-            "var": VarNode,
-            "import": ImportNode,
-            "sweep": SweepNode,
-            "str": ObjectNode,
-            "index": IndexNode,
-            "item": ItemNode,
-            "uuid": UuidNode,
-            "date": DateNode,
-            "cmd": CmdNode,
+            self._token_schema("var"): VarNode,
+            self._token_schema("import"): ImportNode,
+            self._token_schema("sweep"): SweepNode,
+            self._token_schema("index"): IndexNode,
+            self._token_schema("item"): ItemNode,
+            self._token_schema("uuid"): UuidNode,
+            self._token_schema("date"): DateNode,
+            self._token_schema("cmd"): CmdNode,
         }
 
         self._extended_and_special_forms = {
             Schema(
                 {
-                    self._token_schema("directive"): lambda x: x in self._call_forms,
+                    self._token_schema("directive"): str,
                     self._token_schema("args"): list,
                     self._token_schema("kwargs"): dict,
                 }
@@ -150,8 +165,28 @@ class Parser:
             Schema({self._token_schema("for"): object}): self._parse_for,
         }
 
-    def _token_schema(self, name: str) -> Schema:
-        return Schema(lambda x: self._scanner.scan(x)[0].name == name)
+    def _token_schema(
+        self,
+        name: str,
+        args: Optional[OrderedDict[str, Type]] = None,
+        kwargs: Optional[OrderedDict[str, Type]] = None,
+    ) -> Schema:
+        args = OrderedDict() if args is None else args
+        kwargs = OrderedDict() if kwargs is None else kwargs
+
+        def _validator(token: Union[str, Token]) -> bool:
+            if isinstance(token, str):
+                tokens = self._scanner.scan(token)
+                if len(tokens) != 1:
+                    return False
+                token = tokens[0]
+
+            if token.name != name:
+                return False
+
+            return True
+
+        return Schema(_validator)
 
     def _key_value_pairs_by_token_name(
         self, data: Dict[str, Any]
@@ -164,11 +199,8 @@ class Parser:
 
     def _parse_extended_form(self, data: dict) -> Node:
         pairs = self._key_value_pairs_by_token_name(data)
-        directive_name = pairs["directive"][1]
-        node_type = self._call_forms[directive_name]
-        args = [self.parse(x) for x in pairs["args"][1]]
-        kwargs = {k: self.parse(v) for k, v in pairs["kwargs"][1].items()}
-        return node_type(*args, **kwargs)
+        token = Token(pairs["directive"][1], pairs["args"][1], pairs["kwargs"][1])
+        return self._parse_token(token)
 
     def _parse_instance(self, data: dict) -> InstanceNode:
         pairs = self._key_value_pairs_by_token_name(data)
@@ -185,28 +217,43 @@ class Parser:
     def _parse_for(self, data: dict) -> ForNode:
         pairs = self._key_value_pairs_by_token_name(data)
         loop, body = pairs["for"]
-        return ForNode(loop.args[0], self.parse(body), *loop.args[1:], **loop.kwargs)
+        iterable = ObjectNode(loop.args[0])
+        identifier = (
+            loop.args[1] if len(loop.args) > 1 else loop.kwargs.get("identifier")
+        )
+        identifier = ObjectNode(identifier) if identifier else None
+        return ForNode(iterable, self.parse(body), identifier=identifier)
 
     def _parse_dict(self, data: dict) -> DictNode:
         for schema, fn in self._extended_and_special_forms.items():
             if schema.is_valid(data):
-                return fn(data)
+                try:
+                    return fn(data)
+                except:
+                    raise ChoixeStructValidationError(data)
 
         return DictNode({self._parse_str(k): self.parse(v) for k, v in data.items()})
 
     def _parse_list(self, data: list) -> ListNode:
         return ListNode(*[self.parse(x) for x in data])
 
+    def _parse_token(self, token: Token) -> Node:
+        if token.name == "str":
+            return ObjectNode(token.args[0])
+
+        for schema, fn in self._call_forms.items():
+            if schema.is_valid(token):
+                args = [self.parse(x) for x in token.args]
+                kwargs = {k: self.parse(v) for k, v in token.kwargs.items()}
+                node = fn(*args, **kwargs)
+                return node
+
+        raise ChoixeTokenValidationError(token)
+
     def _parse_str(self, data: str) -> Node:
         nodes = []
         for token in self._scanner.scan(data):
-            if token.name not in self._call_forms:
-                raise NotImplementedError(
-                    f'Error when parsing "{data}": the directive "{token.name}" is '
-                    "not recognized by Choixe."
-                )
-            node = self._call_forms[token.name](*token.args, **token.kwargs)
-            nodes.append(node)
+            nodes.append(self._parse_token(token))
 
         if len(nodes) == 1:
             return nodes[0]
@@ -222,12 +269,38 @@ class Parser:
         Returns:
             Node: The parsed Choixe AST node.
         """
-        fn = ObjectNode
-        for type_, parse_fn in self._type_map.items():
-            if isinstance(data, type_):
-                fn = parse_fn
-                break
-        return fn(data)
+        try:
+            fn = ObjectNode
+            for type_, parse_fn in self._type_map.items():
+                if isinstance(data, type_):
+                    fn = parse_fn
+                    break
+            res = fn(data)
+            return res
+
+        except (ChoixeSyntaxError, SyntaxError) as e:
+            code = e.args[0]
+            raise ChoixeParsingError(
+                f'Error when parsing code "{code}" found in "{data}", expected either '
+                "a compact form like $DIRECTIVE, or a call form like "
+                "$DIRECTIVE(ARGS, KWARGS)."
+            )
+        except ChoixeTokenValidationError as e:
+            token: Token = e.args[0]
+            raise ChoixeParsingError(
+                f'Token "{token}" found in "{data}" does not validate against any of '
+                "the available call forms. Please check that the directive and "
+                "argument names are spelled correctly and match the directive "
+                "signature."
+            )
+        except ChoixeStructValidationError as e:
+            expr = e.args[0]
+            raise ChoixeParsingError(
+                f'Structure "{expr}" does not validate against any of the available '
+                "special or extended forms. Please check that the directive and "
+                "argument names are spelled correctly and match the directive "
+                "signature."
+            )
 
 
 def parse(data: Any) -> Node:
