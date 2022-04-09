@@ -107,15 +107,15 @@ class Processor(NodeVisitor):
     def visit_var(self, node: VarNode) -> List[Any]:
         default = None
         if node.default is not None:
-            default = node.default.accept(self)[0]
+            default = node.default.data
 
-        if node.env is not None and node.env.accept(self)[0]:
+        if node.env is not None and node.env.data:
             default = os.getenv(node.identifier.data, default=default)
 
         return [py_.get(self._context, node.identifier.data, default)]
 
     def visit_import(self, node: ImportNode) -> List[Any]:
-        path = Path(node.path.accept(self)[0])
+        path = Path(node.path.data)
         if not path.is_absolute():
             path = self._cwd / path
 

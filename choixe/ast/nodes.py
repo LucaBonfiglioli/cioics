@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+
+# from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 
@@ -67,6 +69,7 @@ class NodeVisitor:  # pragma: no cover
         return node
 
 
+@dataclass
 class Node(ABC):
     """A generic element of the Choixe AST, all nodes must implement this interface."""
 
@@ -85,6 +88,7 @@ class Node(ABC):
         pass
 
 
+@dataclass
 class HashNode(Node):
     """A `HashNode` is a special type of node that is hashable. It represents an
     immutable structure and can generally be used as a dictionary key."""
@@ -113,7 +117,6 @@ class ListNode(Node):
     nodes: List[Node]
 
     def __init__(self, *nodes: Node) -> None:
-        super().__init__()
         self.nodes = nodes
 
     def accept(self, visitor: NodeVisitor) -> Any:
@@ -138,7 +141,6 @@ class StrBundleNode(HashNode):
     nodes: List[HashNode]
 
     def __init__(self, *nodes: HashNode) -> None:
-        super().__init__()
         self.nodes = nodes
 
     def accept(self, visitor: NodeVisitor) -> Any:
@@ -174,7 +176,6 @@ class SweepNode(HashNode):
     cases: List[Node]
 
     def __init__(self, *cases: Node) -> None:
-        super().__init__()
         self.cases = cases
 
     def accept(self, visitor: NodeVisitor) -> Any:
