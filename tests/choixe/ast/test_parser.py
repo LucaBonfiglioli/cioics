@@ -13,7 +13,7 @@ from choixe.ast.nodes import (
     ItemNode,
     ListNode,
     ModelNode,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     SweepNode,
     UuidNode,
@@ -27,11 +27,11 @@ class TestParse:
         expr = {"a": 10, "b": {"c": 10.0, "d": "hello"}}
         expected = DictNode(
             {
-                ObjectNode("a"): ObjectNode(10),
-                ObjectNode("b"): DictNode(
+                LiteralNode("a"): LiteralNode(10),
+                LiteralNode("b"): DictNode(
                     {
-                        ObjectNode("c"): ObjectNode(10.0),
-                        ObjectNode("d"): ObjectNode("hello"),
+                        LiteralNode("c"): LiteralNode(10.0),
+                        LiteralNode("d"): LiteralNode("hello"),
                     }
                 ),
             }
@@ -41,13 +41,13 @@ class TestParse:
     def test_parse_list(self):
         expr = [1, 2, 3, ("foo", "bar", [10.0, 10])]
         expected = ListNode(
-            ObjectNode(1),
-            ObjectNode(2),
-            ObjectNode(3),
+            LiteralNode(1),
+            LiteralNode(2),
+            LiteralNode(3),
             ListNode(
-                ObjectNode("foo"),
-                ObjectNode("bar"),
-                ListNode(ObjectNode(10.0), ObjectNode(10)),
+                LiteralNode("foo"),
+                LiteralNode("bar"),
+                ListNode(LiteralNode(10.0), LiteralNode(10)),
             ),
         )
         assert parse(expr) == expected
@@ -67,16 +67,16 @@ class TestParse:
             },
         }
         expected = InstanceNode(
-            ObjectNode("path/to/a/script.py:ClassName"),
+            LiteralNode("path/to/a/script.py:ClassName"),
             DictNode(
                 {
-                    ObjectNode("a"): ObjectNode(10),
-                    ObjectNode("b"): InstanceNode(
-                        ObjectNode("some.interesting.module.MyClass"),
+                    LiteralNode("a"): LiteralNode(10),
+                    LiteralNode("b"): InstanceNode(
+                        LiteralNode("some.interesting.module.MyClass"),
                         DictNode(
                             {
-                                ObjectNode("foo"): ObjectNode("hello"),
-                                ObjectNode("bar"): ObjectNode("world"),
+                                LiteralNode("foo"): LiteralNode("hello"),
+                                LiteralNode("bar"): LiteralNode("world"),
                             }
                         ),
                     ),
@@ -97,14 +97,14 @@ class TestParse:
             },
         }
         expected = ModelNode(
-            ObjectNode("path/to/a/script.py:ModelName"),
+            LiteralNode("path/to/a/script.py:ModelName"),
             DictNode(
                 {
-                    ObjectNode("a"): ObjectNode(10),
-                    ObjectNode("b"): DictNode(
+                    LiteralNode("a"): LiteralNode(10),
+                    LiteralNode("b"): DictNode(
                         {
-                            ObjectNode("foo"): ObjectNode("hello"),
-                            ObjectNode("bar"): ObjectNode("world"),
+                            LiteralNode("foo"): LiteralNode("hello"),
+                            LiteralNode("bar"): LiteralNode("world"),
                         }
                     ),
                 }
@@ -115,26 +115,26 @@ class TestParse:
     def test_parse_for(self):
         expr = {"$for(iterable, x)": {"node_$index(x)": "Hello_$item(x)"}}
         expected = ForNode(
-            ObjectNode("iterable"),
+            LiteralNode("iterable"),
             DictNode(
                 {
                     StrBundleNode(
-                        ObjectNode("node_"), IndexNode(ObjectNode("x"))
-                    ): StrBundleNode(ObjectNode("Hello_"), ItemNode(ObjectNode("x")))
+                        LiteralNode("node_"), IndexNode(LiteralNode("x"))
+                    ): StrBundleNode(LiteralNode("Hello_"), ItemNode(LiteralNode("x")))
                 }
             ),
-            ObjectNode("x"),
+            LiteralNode("x"),
         )
         assert parse(expr) == expected
 
     def test_parse_for_compact(self):
         expr = {"$for(iterable)": {"node_$index": "Hello_$item"}}
         expected = ForNode(
-            ObjectNode("iterable"),
+            LiteralNode("iterable"),
             DictNode(
                 {
-                    StrBundleNode(ObjectNode("node_"), IndexNode()): StrBundleNode(
-                        ObjectNode("Hello_"), ItemNode()
+                    StrBundleNode(LiteralNode("node_"), IndexNode()): StrBundleNode(
+                        LiteralNode("Hello_"), ItemNode()
                     )
                 }
             ),
@@ -145,7 +145,7 @@ class TestParse:
 class TestStringParse:
     def test_simple(self):
         expr = "I am a string"
-        assert parse(expr) == ObjectNode(expr)
+        assert parse(expr) == LiteralNode(expr)
 
     @pytest.mark.parametrize(
         ["id_", "default", "env"],
@@ -159,26 +159,26 @@ class TestStringParse:
         default_str = f'"{default}"' if isinstance(default, str) else default
         expr = f"$var({id_}, default={default_str}, env={env})"
         assert parse(expr) == VarNode(
-            ObjectNode(id_), default=ObjectNode(default), env=ObjectNode(env)
+            LiteralNode(id_), default=LiteralNode(default), env=LiteralNode(env)
         )
 
     def test_import(self):
         path = "path/to/my/file.json"
         expr = f"$import('{path}')"
-        assert parse(expr) == ImportNode(ObjectNode(path))
+        assert parse(expr) == ImportNode(LiteralNode(path))
 
     def test_sweep(self):
         expr = "$sweep(10, foo.bar, '30')"
-        expected = SweepNode(ObjectNode(10), ObjectNode("foo.bar"), ObjectNode("30"))
+        expected = SweepNode(LiteralNode(10), LiteralNode("foo.bar"), LiteralNode("30"))
         assert parse(expr) == expected
 
     def test_str_bundle(self):
         expr = "I am a string with $var(one.two.three) and $sweep(10, foo.bar, '30')"
         expected = StrBundleNode(
-            ObjectNode("I am a string with "),
-            VarNode(ObjectNode("one.two.three")),
-            ObjectNode(" and "),
-            SweepNode(ObjectNode(10), ObjectNode("foo.bar"), ObjectNode("30")),
+            LiteralNode("I am a string with "),
+            VarNode(LiteralNode("one.two.three")),
+            LiteralNode(" and "),
+            SweepNode(LiteralNode(10), LiteralNode("foo.bar"), LiteralNode("30")),
         )
         assert parse(expr) == expected
 
@@ -192,7 +192,7 @@ class TestStringParse:
         expr = "$date"
         if format_ is not None:
             expr += f'("{format_}")'
-        format_ = ObjectNode(format_) if format_ is not None else None
+        format_ = LiteralNode(format_) if format_ is not None else None
         assert parse(expr) == DateNode(format_)
 
 

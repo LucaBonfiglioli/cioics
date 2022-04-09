@@ -15,7 +15,7 @@ from choixe.ast.nodes import (
     ListNode,
     ModelNode,
     Node,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     SweepNode,
     UuidNode,
@@ -204,24 +204,24 @@ class Parser:
 
     def _parse_instance(self, data: dict) -> InstanceNode:
         pairs = self._key_value_pairs_by_token_name(data)
-        symbol = ObjectNode(pairs["call"][1])
+        symbol = LiteralNode(pairs["call"][1])
         args = self.parse(pairs["args"][1])
         return InstanceNode(symbol, args)
 
     def _parse_model(self, data: dict) -> ModelNode:
         pairs = self._key_value_pairs_by_token_name(data)
-        symbol = ObjectNode(pairs["model"][1])
+        symbol = LiteralNode(pairs["model"][1])
         args = self.parse(pairs["args"][1])
         return ModelNode(symbol, args)
 
     def _parse_for(self, data: dict) -> ForNode:
         pairs = self._key_value_pairs_by_token_name(data)
         loop, body = pairs["for"]
-        iterable = ObjectNode(loop.args[0])
+        iterable = LiteralNode(loop.args[0])
         identifier = (
             loop.args[1] if len(loop.args) > 1 else loop.kwargs.get("identifier")
         )
-        identifier = ObjectNode(identifier) if identifier else None
+        identifier = LiteralNode(identifier) if identifier else None
         return ForNode(iterable, self.parse(body), identifier=identifier)
 
     def _parse_dict(self, data: dict) -> DictNode:
@@ -239,7 +239,7 @@ class Parser:
 
     def _parse_token(self, token: Token) -> Node:
         if token.name == "str":
-            return ObjectNode(token.args[0])
+            return LiteralNode(token.args[0])
 
         for schema, fn in self._call_forms.items():
             if schema.is_valid(token):
@@ -270,7 +270,7 @@ class Parser:
             Node: The parsed Choixe AST node.
         """
         try:
-            fn = ObjectNode
+            fn = LiteralNode
             for type_, parse_fn in self._type_map.items():
                 if isinstance(data, type_):
                     fn = parse_fn

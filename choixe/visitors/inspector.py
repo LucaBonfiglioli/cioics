@@ -18,7 +18,7 @@ from choixe.ast.nodes import (
     ModelNode,
     Node,
     NodeVisitor,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     SweepNode,
     VarNode,
@@ -61,7 +61,7 @@ class Inspector(NodeVisitor):
         start = Inspection(processed=True)
         return sum([x.accept(self) for x in node.nodes], start=start)
 
-    def visit_object(self, node: ObjectNode) -> Inspection:
+    def visit_object(self, node: LiteralNode) -> Inspection:
         return Inspection(processed=True)
 
     def visit_str_bundle(self, node: StrBundleNode) -> Inspection:

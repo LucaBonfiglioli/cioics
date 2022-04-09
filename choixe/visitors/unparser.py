@@ -13,7 +13,7 @@ from choixe.ast.nodes import (
     ModelNode,
     Node,
     NodeVisitor,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     SweepNode,
     UuidNode,
@@ -37,7 +37,7 @@ class Unparser(NodeVisitor):
             data.append(x.accept(self))
         return data
 
-    def visit_object(self, node: ObjectNode) -> Any:
+    def visit_object(self, node: LiteralNode) -> Any:
         return node.data
 
     def visit_str_bundle(self, node: StrBundleNode) -> str:
@@ -141,7 +141,7 @@ class Unparser(NodeVisitor):
 
         all_leafs = True
         for x in list(args) + list(kwargs.values()):
-            if not isinstance(x, ObjectNode):
+            if not isinstance(x, LiteralNode):
                 all_leafs = False
                 break
 

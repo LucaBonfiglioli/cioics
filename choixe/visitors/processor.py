@@ -21,7 +21,7 @@ from choixe.ast.nodes import (
     ModelNode,
     Node,
     NodeVisitor,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     SweepNode,
     UuidNode,
@@ -91,7 +91,7 @@ class Processor(NodeVisitor):
             data = new_data
         return data
 
-    def visit_object(self, node: ObjectNode) -> List[Any]:
+    def visit_object(self, node: LiteralNode) -> List[Any]:
         return [node.data]
 
     def visit_str_bundle(self, node: StrBundleNode) -> List[str]:

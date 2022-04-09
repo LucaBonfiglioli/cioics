@@ -1,7 +1,7 @@
 from typing import Any
 
 import numpy as np
-from choixe.ast.nodes import Node, ObjectNode
+from choixe.ast.nodes import Node, LiteralNode
 from choixe.visitors.unparser import Unparser
 from pydantic import BaseModel
 
@@ -9,7 +9,7 @@ from pydantic import BaseModel
 class Decoder(Unparser):
     """Specialization of the `Unparser` for the decode operation."""
 
-    def visit_object(self, node: ObjectNode) -> Any:
+    def visit_object(self, node: LiteralNode) -> Any:
         data = super().visit_object(node)
         if isinstance(data, np.ndarray):
             return data.tolist()

@@ -13,7 +13,7 @@ from choixe.ast.nodes import (
     ListNode,
     ModelNode,
     Node,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     SweepNode,
     UuidNode,
@@ -26,52 +26,52 @@ from deepdiff import DeepDiff
 @pytest.mark.parametrize(
     ["node", "expected"],
     [
-        [ObjectNode(10), 10],
-        [ObjectNode(0.124), 0.124],
-        [ObjectNode("hello"), "hello"],
-        [ObjectNode("my_var"), "my_var"],
+        [LiteralNode(10), 10],
+        [LiteralNode(0.124), 0.124],
+        [LiteralNode("hello"), "hello"],
+        [LiteralNode("my_var"), "my_var"],
         [
-            VarNode(ObjectNode("variable.one")),
+            VarNode(LiteralNode("variable.one")),
             "$var(variable.one)",
         ],
         [
-            VarNode(ObjectNode("variable.one"), env=ObjectNode(True)),
+            VarNode(LiteralNode("variable.one"), env=LiteralNode(True)),
             "$var(variable.one, env=True)",
         ],
         [
-            VarNode(ObjectNode("variable.one"), default=ObjectNode(-24)),
+            VarNode(LiteralNode("variable.one"), default=LiteralNode(-24)),
             "$var(variable.one, default=-24)",
         ],
         [
             VarNode(
-                ObjectNode("variable.one"),
-                default=ObjectNode(-24),
-                env=ObjectNode(True),
+                LiteralNode("variable.one"),
+                default=LiteralNode(-24),
+                env=LiteralNode(True),
             ),
             "$var(variable.one, default=-24, env=True)",
         ],
-        [ImportNode(ObjectNode("path/to/file.yaml")), '$import("path/to/file.yaml")'],
+        [ImportNode(LiteralNode("path/to/file.yaml")), '$import("path/to/file.yaml")'],
         [
-            SweepNode(ObjectNode("a"), ObjectNode("variable"), ObjectNode(10)),
+            SweepNode(LiteralNode("a"), LiteralNode("variable"), LiteralNode(10)),
             "$sweep(a, variable, 10)",
         ],
-        [StrBundleNode(ObjectNode("alice")), "alice"],
+        [StrBundleNode(LiteralNode("alice")), "alice"],
         [
             StrBundleNode(
-                ObjectNode("alice "),
-                VarNode(ObjectNode("foo"), default=ObjectNode("loves")),
-                ObjectNode(" bob"),
+                LiteralNode("alice "),
+                VarNode(LiteralNode("foo"), default=LiteralNode("loves")),
+                LiteralNode(" bob"),
             ),
             "alice $var(foo, default=loves) bob",
         ],
         [
             DictNode(
                 {
-                    ObjectNode("key1"): ObjectNode(10),
-                    ObjectNode("key2"): DictNode(
+                    LiteralNode("key1"): LiteralNode(10),
+                    LiteralNode("key2"): DictNode(
                         {
-                            ObjectNode("key1"): ObjectNode(10.2),
-                            ObjectNode("key2"): ObjectNode("hello"),
+                            LiteralNode("key1"): LiteralNode(10.2),
+                            LiteralNode("key2"): LiteralNode("hello"),
                         }
                     ),
                 }
@@ -82,29 +82,29 @@ from deepdiff import DeepDiff
             DictNode(
                 {
                     StrBundleNode(
-                        VarNode(ObjectNode("var")), ObjectNode("foo")
-                    ): ObjectNode("bar")
+                        VarNode(LiteralNode("var")), LiteralNode("foo")
+                    ): LiteralNode("bar")
                 }
             ),
             {"$var(var)foo": "bar"},
         ],
         [
-            ListNode(ObjectNode(10), ObjectNode(-0.25), ListNode(ObjectNode("aa"))),
+            ListNode(LiteralNode(10), LiteralNode(-0.25), ListNode(LiteralNode("aa"))),
             [10, -0.25, ["aa"]],
         ],
         [
             InstanceNode(
-                ObjectNode("path/to_my/file.py:MyClass"),
+                LiteralNode("path/to_my/file.py:MyClass"),
                 DictNode(
                     {
-                        ObjectNode("arg1"): InstanceNode(
-                            ObjectNode("module.submodule.function"),
+                        LiteralNode("arg1"): InstanceNode(
+                            LiteralNode("module.submodule.function"),
                             DictNode(
                                 {
-                                    ObjectNode("a"): ListNode(
-                                        ObjectNode(1), ObjectNode(2)
+                                    LiteralNode("a"): ListNode(
+                                        LiteralNode(1), LiteralNode(2)
                                     ),
-                                    ObjectNode("b"): ObjectNode(100),
+                                    LiteralNode("b"): LiteralNode(100),
                                 }
                             ),
                         )
@@ -123,13 +123,15 @@ from deepdiff import DeepDiff
         ],
         [
             ModelNode(
-                ObjectNode("path/to_my/file.py:MyModel"),
+                LiteralNode("path/to_my/file.py:MyModel"),
                 DictNode(
                     {
-                        ObjectNode("arg1"): DictNode(
+                        LiteralNode("arg1"): DictNode(
                             {
-                                ObjectNode("a"): ListNode(ObjectNode(1), ObjectNode(2)),
-                                ObjectNode("b"): ObjectNode(100),
+                                LiteralNode("a"): ListNode(
+                                    LiteralNode(1), LiteralNode(2)
+                                ),
+                                LiteralNode("b"): LiteralNode(100),
                             }
                         ),
                     }
@@ -142,26 +144,26 @@ from deepdiff import DeepDiff
         ],
         [
             ForNode(
-                ObjectNode("my.var"),
+                LiteralNode("my.var"),
                 DictNode(
                     {
-                        ObjectNode("Hello"): ObjectNode("World"),
+                        LiteralNode("Hello"): LiteralNode("World"),
                         StrBundleNode(
-                            ObjectNode("Number_"), IndexNode(ObjectNode("x"))
-                        ): ItemNode(ObjectNode("x")),
+                            LiteralNode("Number_"), IndexNode(LiteralNode("x"))
+                        ): ItemNode(LiteralNode("x")),
                     }
                 ),
-                ObjectNode("x"),
+                LiteralNode("x"),
             ),
             {"$for(my.var, x)": {"Hello": "World", "Number_$index(x)": "$item(x)"}},
         ],
         [
             ForNode(
-                ObjectNode("my.var"),
+                LiteralNode("my.var"),
                 DictNode(
                     {
-                        ObjectNode("Hello"): ObjectNode("World"),
-                        StrBundleNode(ObjectNode("Number_"), IndexNode()): ItemNode(),
+                        LiteralNode("Hello"): LiteralNode("World"),
+                        StrBundleNode(LiteralNode("Number_"), IndexNode()): ItemNode(),
                     }
                 ),
             ),
@@ -169,8 +171,8 @@ from deepdiff import DeepDiff
         ],
         [UuidNode(), "$uuid"],
         [DateNode(), "$date"],
-        [DateNode(ObjectNode("%Y%m%d")), '$date("%Y%m%d")'],
-        [CmdNode(ObjectNode("ls -lha")), '$cmd("ls -lha")'],
+        [DateNode(LiteralNode("%Y%m%d")), '$date("%Y%m%d")'],
+        [CmdNode(LiteralNode("ls -lha")), '$cmd("ls -lha")'],
     ],
 )
 def test_unparse(node: Node, expected: Any):

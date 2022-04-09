@@ -2,7 +2,7 @@ from typing import Any
 
 import numpy as np
 import pytest
-from choixe.ast.nodes import DictNode, ListNode, Node, ObjectNode
+from choixe.ast.nodes import DictNode, ListNode, Node, LiteralNode
 from choixe.visitors import decode
 from deepdiff import DeepDiff
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ class Cat(BaseModel):
     ["node", "expected"],
     [
         [
-            DictNode({ObjectNode("foo"): ObjectNode(np.zeros((2, 3, 2)))}),
+            DictNode({LiteralNode("foo"): LiteralNode(np.zeros((2, 3, 2)))}),
             {
                 "foo": [
                     [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
@@ -33,7 +33,7 @@ class Cat(BaseModel):
             },
         ],
         [
-            ListNode(ObjectNode(np.zeros((2, 3, 2)))),
+            ListNode(LiteralNode(np.zeros((2, 3, 2)))),
             [
                 [
                     [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
@@ -41,10 +41,10 @@ class Cat(BaseModel):
                 ]
             ],
         ],
-        [ObjectNode(np.uint8(24)), 24],
-        [ObjectNode(np.float64(0.125)), 0.125],
+        [LiteralNode(np.uint8(24)), 24],
+        [LiteralNode(np.float64(0.125)), 0.125],
         [
-            ObjectNode(
+            LiteralNode(
                 Cat(
                     age=10,
                     weight=5.23,

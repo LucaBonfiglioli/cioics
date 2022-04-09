@@ -29,7 +29,7 @@ class NodeVisitor:  # pragma: no cover
     def visit_list(self, node: ListNode) -> Any:
         return node
 
-    def visit_object(self, node: ObjectNode) -> Any:
+    def visit_object(self, node: LiteralNode) -> Any:
         return node
 
     def visit_str_bundle(self, node: StrBundleNode) -> Any:
@@ -124,8 +124,8 @@ class ListNode(Node):
 
 
 @dataclass(eq=False)
-class ObjectNode(HashNode):
-    """An `ObjectNode` contains a single generic hashable python object, like a built-in
+class LiteralNode(HashNode):
+    """An `LiteralNode` contains a single generic hashable python object, like a built-in
     int, float or str."""
 
     data: Any
@@ -151,9 +151,9 @@ class StrBundleNode(HashNode):
 class VarNode(HashNode):
     """A `VarNode` represents a Choixe variable. It has an id and a default value."""
 
-    identifier: ObjectNode
-    default: Optional[ObjectNode] = None
-    env: Optional[ObjectNode] = None
+    identifier: LiteralNode
+    default: Optional[LiteralNode] = None
+    env: Optional[LiteralNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_var(self)
@@ -163,7 +163,7 @@ class VarNode(HashNode):
 class ImportNode(Node):
     """An `ImportNode` represents a Choixe import directive from a filesystem path."""
 
-    path: ObjectNode
+    path: LiteralNode
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_import(self)
@@ -187,7 +187,7 @@ class InstanceNode(Node):
     """An `InstanceNode` represents a Choixe instance block to get the result of a
     generic python callable object."""
 
-    symbol: ObjectNode
+    symbol: LiteralNode
     args: DictNode
 
     def accept(self, visitor: NodeVisitor) -> Any:
@@ -206,9 +206,9 @@ class ForNode(Node):
     from the context. A for loop also has an string identifier, that mast be a valid
     python id."""
 
-    iterable: ObjectNode
+    iterable: LiteralNode
     body: Node
-    identifier: Optional[ObjectNode] = None
+    identifier: Optional[LiteralNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_for(self)
@@ -218,7 +218,7 @@ class ForNode(Node):
 class IndexNode(HashNode):
     """An `IndexNode` represents the index of the current iteration of a for loop."""
 
-    identifier: Optional[ObjectNode] = None
+    identifier: Optional[LiteralNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_index(self)
@@ -228,7 +228,7 @@ class IndexNode(HashNode):
 class ItemNode(HashNode):
     """An `ItemNode` represents the item of the current iteration of a for loop."""
 
-    identifier: Optional[ObjectNode] = None
+    identifier: Optional[LiteralNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_item(self)
@@ -246,7 +246,7 @@ class UuidNode(HashNode):
 class DateNode(HashNode):
     """A `DateNode` represents the current datetime with an optional custom format."""
 
-    format: Optional[ObjectNode] = None
+    format: Optional[LiteralNode] = None
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_date(self)
@@ -256,7 +256,7 @@ class DateNode(HashNode):
 class CmdNode(HashNode):
     """A `CmdNode` represents the calling of a system command."""
 
-    command: ObjectNode
+    command: LiteralNode
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_cmd(self)

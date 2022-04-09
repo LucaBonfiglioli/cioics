@@ -5,7 +5,7 @@ from choixe.ast.nodes import (
     DictNode,
     ListNode,
     Node,
-    ObjectNode,
+    LiteralNode,
     StrBundleNode,
     VarNode,
 )
@@ -16,23 +16,23 @@ from deepdiff import DeepDiff
 @pytest.mark.parametrize(
     ["node", "expected"],
     [
-        [ObjectNode(10), [([], 10)]],
+        [LiteralNode(10), [([], 10)]],
         [
             StrBundleNode(
-                ObjectNode("alice "),
-                VarNode(ObjectNode("foo"), default=ObjectNode("loves")),
-                ObjectNode(" bob"),
+                LiteralNode("alice "),
+                VarNode(LiteralNode("foo"), default=LiteralNode("loves")),
+                LiteralNode(" bob"),
             ),
             [([], "alice $var(foo, default=loves) bob")],
         ],
         [
             DictNode(
                 {
-                    ObjectNode("key1"): ObjectNode(10),
-                    ObjectNode("key2"): DictNode(
+                    LiteralNode("key1"): LiteralNode(10),
+                    LiteralNode("key2"): DictNode(
                         {
-                            ObjectNode("key1"): ObjectNode(10.2),
-                            ObjectNode("key2"): ObjectNode("hello"),
+                            LiteralNode("key1"): LiteralNode(10.2),
+                            LiteralNode("key2"): LiteralNode("hello"),
                         }
                     ),
                 }
@@ -40,7 +40,7 @@ from deepdiff import DeepDiff
             [(["key1"], 10), (["key2", "key1"], 10.2), (["key2", "key2"], "hello")],
         ],
         [
-            ListNode(ObjectNode(10), ObjectNode(-0.25), ListNode(ObjectNode("aa"))),
+            ListNode(LiteralNode(10), LiteralNode(-0.25), ListNode(LiteralNode("aa"))),
             [([0], 10), ([1], -0.25), ([2, 0], "aa")],
         ],
     ],
