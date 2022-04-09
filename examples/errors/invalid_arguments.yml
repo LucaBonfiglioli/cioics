@@ -1,0 +1,5 @@
+a:
+  $directive: var
+  $args:
+    - "$var(my_iterable)"
+  $kwargs: {}

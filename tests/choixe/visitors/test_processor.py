@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path, PurePosixPath
-import sys
 from typing import Tuple
-
-import pytest
 
 from choixe.ast.parser import parse
 from choixe.utils.io import load
@@ -369,9 +366,7 @@ class TestProcessor:
         assert len(processed) == 1 and isinstance(processed[0], str)
 
     def test_cmd(self):
-        if os.name != "posix":
-            pytest.skip()
-        data = "$cmd('ls -lha')"
+        data = "$cmd('python --version')"
         processed = process(parse(data))
         assert len(processed) == 1 and isinstance(processed[0], str)
 

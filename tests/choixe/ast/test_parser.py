@@ -19,7 +19,12 @@ from choixe.ast.nodes import (
     UuidNode,
     VarNode,
 )
-from choixe.ast.parser import ChoixeParsingError, ChoixeSyntaxError, parse
+from choixe.ast.parser import (
+    ChoixeParsingError,
+    ChoixeStructValidationError,
+    ChoixeSyntaxError,
+    parse,
+)
 
 
 class TestParse:
@@ -217,5 +222,10 @@ class TestParserRaise:
         ],
     )
     def test_syntax_error(self, expr: str):
+        with pytest.raises(ChoixeParsingError):
+            parse(expr)
+
+    def test_invalid_arg(self):
+        expr = {"$directive": "var", "$args": ["$var(one.two)"], "$kwargs": {}}
         with pytest.raises(ChoixeParsingError):
             parse(expr)

@@ -10,7 +10,7 @@ from schema import Schema
 from choixe.ast.nodes import Node
 from choixe.ast.parser import parse
 from choixe.utils.io import dump, load
-from choixe.visitors import decode, process, walk, inspect, Inspection
+from choixe.visitors import Inspection, decode, inspect, process, walk
 
 
 class XConfig(Box):
@@ -48,6 +48,9 @@ class XConfig(Box):
 
         self.update(data)
         self.set_schema(schema)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<{self.__class__.__name__}: {self.to_dict()}>"
 
     @classmethod
     def from_file(
