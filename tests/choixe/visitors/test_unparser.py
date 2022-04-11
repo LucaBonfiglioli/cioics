@@ -16,6 +16,7 @@ from choixe.ast.nodes import (
     LiteralNode,
     StrBundleNode,
     SweepNode,
+    TmpDirNode,
     UuidNode,
     VarNode,
 )
@@ -173,6 +174,8 @@ from deepdiff import DeepDiff
         [DateNode(), "$date"],
         [DateNode(LiteralNode("%Y%m%d")), '$date("%Y%m%d")'],
         [CmdNode(LiteralNode("ls -lha")), '$cmd("ls -lha")'],
+        [TmpDirNode(), "$tmp"],
+        [TmpDirNode(LiteralNode("my_tmp")), "$tmp(my_tmp)"],
     ],
 )
 def test_unparse(node: Node, expected: Any):

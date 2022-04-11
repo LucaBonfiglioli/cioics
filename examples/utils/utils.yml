@@ -1,3 +1,6 @@
 a: $uuid
 b: $date
 c: $cmd("python --version")
+d: $tmp
+e: $tmp
+f: $tmp(my_tmp)

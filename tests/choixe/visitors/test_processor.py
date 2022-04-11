@@ -370,6 +370,16 @@ class TestProcessor:
         processed = process(parse(data))
         assert len(processed) == 1 and isinstance(processed[0], str)
 
+    def test_tmp(self):
+        data = "$tmp"
+        processed = process(parse(data))
+        assert len(processed) == 1 and isinstance(processed[0], str)
+
+    def test_tmp_name(self):
+        data = "$tmp(my_tmp)"
+        processed = process(parse(data))
+        assert len(processed) == 1 and isinstance(processed[0], str)
+
     def test_for_mindfuck(self):
         data = {
             "$for(collection3, x)": [

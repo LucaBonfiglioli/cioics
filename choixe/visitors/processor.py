@@ -1,4 +1,5 @@
 import os
+import tempfile
 import uuid
 from copy import deepcopy
 from dataclasses import dataclass
@@ -18,12 +19,13 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    LiteralNode,
     ModelNode,
     Node,
     NodeVisitor,
-    LiteralNode,
     StrBundleNode,
     SweepNode,
+    TmpDirNode,
     UuidNode,
     VarNode,
 )
@@ -66,6 +68,7 @@ class Processor(NodeVisitor):
 
         self._loop_data: Dict[str, LoopInfo] = {}
         self._current_loop: Optional[str] = None
+        self._tmp_name = str(uuid.uuid1())
 
     def visit_dict(self, node: DictNode) -> List[Dict]:
         data = [{}]
@@ -199,6 +202,12 @@ class Processor(NodeVisitor):
     def visit_cmd(self, node: CmdNode) -> List[str]:
         subp = os.popen(node.command.data)
         return [subp.read()]
+
+    def visit_tmp_dir(self, node: TmpDirNode) -> Any:
+        name = self._tmp_name if node.name is None else node.name.data
+        path = Path(tempfile.gettempdir()) / name
+        path.parent.mkdir(exist_ok=True, parents=True)
+        return [str(path)]
 
 
 def process(

@@ -68,6 +68,9 @@ class NodeVisitor:  # pragma: no cover
     def visit_cmd(self, node: CmdNode) -> Any:
         return node
 
+    def visit_tmp_dir(self, node: TmpDirNode) -> Any:
+        return node
+
 
 @dataclass
 class Node(ABC):
@@ -260,3 +263,13 @@ class CmdNode(HashNode):
 
     def accept(self, visitor: NodeVisitor) -> Any:
         return visitor.visit_cmd(self)
+
+
+@dataclass(eq=False)
+class TmpDirNode(HashNode):
+    """A `TmpDirNode` represents the creation of a temporary directory."""
+
+    name: Optional[LiteralNode] = None
+
+    def accept(self, visitor: NodeVisitor) -> Any:
+        return visitor.visit_tmp_dir(self)

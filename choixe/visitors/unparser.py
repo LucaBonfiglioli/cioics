@@ -10,12 +10,13 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    LiteralNode,
     ModelNode,
     Node,
     NodeVisitor,
-    LiteralNode,
     StrBundleNode,
     SweepNode,
+    TmpDirNode,
     UuidNode,
     VarNode,
 )
@@ -100,6 +101,12 @@ class Unparser(NodeVisitor):
 
     def visit_cmd(self, node: CmdNode) -> Any:
         return self._unparse_auto("cmd", node.command)
+
+    def visit_tmp_dir(self, node: TmpDirNode) -> Any:
+        args = []
+        if node.name is not None:
+            args.append(node.name)
+        return self._unparse_auto("tmp", *args)
 
     def _unparse_as_arg(self, node: Node) -> str:
         unparsed = node.accept(self)

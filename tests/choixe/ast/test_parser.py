@@ -12,10 +12,11 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
-    ModelNode,
     LiteralNode,
+    ModelNode,
     StrBundleNode,
     SweepNode,
+    TmpDirNode,
     UuidNode,
     VarNode,
 )
@@ -199,6 +200,14 @@ class TestStringParse:
             expr += f'("{format_}")'
         format_ = LiteralNode(format_) if format_ is not None else None
         assert parse(expr) == DateNode(format_)
+
+    @pytest.mark.parametrize(["name"], [[None], ["my_name"]])
+    def test_tmp(self, name):
+        expr = "$tmp"
+        if name is not None:
+            expr += f'("{name}")'
+        name = LiteralNode(name) if name is not None else None
+        assert parse(expr) == TmpDirNode(name)
 
 
 class TestParserRaise:

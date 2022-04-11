@@ -18,6 +18,7 @@ from choixe.ast.nodes import (
     LiteralNode,
     StrBundleNode,
     SweepNode,
+    TmpDirNode,
     UuidNode,
     VarNode,
 )
@@ -146,6 +147,7 @@ class Parser:
             self._token_schema("uuid"): UuidNode,
             self._token_schema("date"): DateNode,
             self._token_schema("cmd"): CmdNode,
+            self._token_schema("tmp"): TmpDirNode,
         }
 
         self._extended_and_special_forms = {
