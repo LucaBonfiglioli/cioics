@@ -2,3 +2,8 @@ deepdiff
 rich
 pydantic
 schema
+pydash
+python-box
+PyYAML
+numpy
+astunparse

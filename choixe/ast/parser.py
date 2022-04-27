@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Type, Union
 
+import astunparse
 from choixe.ast.nodes import (
     CmdNode,
     DateNode,
@@ -13,9 +14,9 @@ from choixe.ast.nodes import (
     InstanceNode,
     ItemNode,
     ListNode,
+    LiteralNode,
     ModelNode,
     Node,
-    LiteralNode,
     StrBundleNode,
     SweepNode,
     TmpDirNode,
@@ -65,7 +66,9 @@ class Scanner:
         if isinstance(py_arg, ast.Constant):
             return py_arg.value
         elif isinstance(py_arg, ast.Attribute):
-            name = ast.unparse(py_arg)
+            name = astunparse.unparse(py_arg)
+            if name.endswith("\n"):  # Remove trailing newline
+                name = name[:-1]
             return str(name)
         elif isinstance(py_arg, ast.Name):
             return str(py_arg.id)
